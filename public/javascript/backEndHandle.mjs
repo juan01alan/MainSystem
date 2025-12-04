@@ -1251,7 +1251,7 @@ async function HANDLEOBRASDOM() {
                         <p><span class="font-bold">Status:</span> ${element.status == 0 ? "🟢 Em andamento" : "✅ Finalizado"}</p>
                         <p><span class="font-bold">Criado em:</span> ${element.Criado}"}</p>
                         
-                        <p><span class="font-bold">Criado em:</span> ${element.Criado}"}</p>
+                        <a><span class="font-bold">Link do projeto:</span> ${element.linkReview}"}</a>
                         <p><span class="font-bold">Operadores:</span> ${operadoresFormatados}</p>
                         ${element.cliente ? `<p><span class="font-bold">Cliente:</span> ${element.cliente}</p>` : ''}
                     </div>
