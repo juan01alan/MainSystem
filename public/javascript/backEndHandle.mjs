@@ -1,4 +1,4 @@
-// main.js - Gerente e Controle de Projetos
+import { onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 import { database } from "./firebase.mjs";
 import { storage } from "./firebase.mjs";
 import { updateLocal, storeLocal, retrieveLocal } from "./storaManager.js";
@@ -22,36 +22,79 @@ document.addEventListener("DOMContentLoaded", () => {
  * Inicializa a página com base nos elementos presentes
  */
 async function initializePage() {
-    /*const refreshBt = document.getElementById("refreshBt");
-    if (refreshBt) {
-        refreshBt.addEventListener('click', refreshPage());
-    }*/
-    const OperatorChatTitle = document.getElementById("nomedoProjetoOutput");
-    const botaoSalvar = document.querySelector("#submitSalvar");
-    const listaOperators = document.getElementById("operatorList");
-    const divObrasList = document.getElementById("divToObras");
+  console.log("🚀 Inicializando página...");
+  console.log("📄 Página atual:", window.location.pathname);
+  
+  // Detectar qual página está sendo carregada
+  const isOperatorChatPage = document.getElementById("nomedoProjetoOutput") && document.getElementById("messages");
+  const isGerenteChatPage = document.getElementById("messagesGerente");
+  const isObrasPage = document.getElementById("divToObras");
+  const isOperatorsPage = document.getElementById("operatorList");
+  const isMinhasObrasPage = document.getElementById("minhasObrasScreen");
+  const isFeedbackPage = document.getElementById("submitFeedback");
+  
+  console.log("🔍 Detecção de páginas:", {
+    isOperatorChatPage,
+    isGerenteChatPage,
+    isObrasPage,
+    isOperatorsPage,
+    isMinhasObrasPage,
+    isFeedbackPage
+  });
+  
+  // Inicializa feedback se estiver na página de feedback
+  if (isFeedbackPage) {
+    console.log("📝 Inicializando sistema de feedback");
+    inicializarSistemaFeedback();
+  }
+  
+  // Inicializa chat do gerente se estiver na página do gerente
+  if (isGerenteChatPage) {
+    console.log("👨‍💼 Inicializando chat do gerente");
+    await setUpMsgsGerente();
+  }
+  
+  // Inicializa chat do operador se estiver na página do operador
+  if (isOperatorChatPage) {
+    console.log("👷 Inicializando chat do operador");
+    await OperatorChatDOM();
+    
+    // Configura botão de envio de mensagem
     const sendMsgBt = document.getElementById("sendMessageBtOperator");
-    const minhasObrasScreen = document.getElementById("minhasObrasScreen");
-    const feedbackBt = document.getElementById("submitFeedback");
-    const msgGerente = document.getElementById("messagesGerente");
-    if(feedbackBt){
-        inicializarSistemaFeedback();
+    if (sendMsgBt) {
+      setupMessageButton(sendMsgBt);
     }
-
-    if (msgGerente) {
-        setUpMsgsGerente();
+  }
+  
+  // Inicializa lista de operadores se estiver na página de operadores
+  if (isOperatorsPage) {
+    console.log("👥 Inicializando lista de operadores");
+    const listaOperators = document.getElementById("operatorList");
+    if (listaOperators) {
+      await MAKEOPERATORSDOM(listaOperators);
     }
-
-    // Inicializa elementos se existirem na página
-    if (OperatorChatTitle) await OperatorChatDOM();
-    if (listaOperators) await MAKEOPERATORSDOM(listaOperators);
-    if (divObrasList) await HANDLEOBRASDOM();
-    if (sendMsgBt) {setupMessageButton(sendMsgBt)};
-    if (minhasObrasScreen) {
-        console.log("📱 Tela de Minhas Obras carregada");
-        await handleOperatorsObra();
+  }
+  
+  // Inicializa lista de obras se estiver na página de obras
+  if (isObrasPage) {
+    console.log("🏗️ Inicializando lista de obras");
+    const divObrasList = document.getElementById("divToObras");
+    if (divObrasList) {
+      await HANDLEOBRASDOM();
     }
-    if (botaoSalvar) await setupSaveButton(botaoSalvar);
+  }
+  
+  // Inicializa tela de minhas obras se estiver na página do operador
+  if (isMinhasObrasPage) {
+    console.log("📱 Inicializando tela de minhas obras");
+    await handleOperatorsObra();
+  }
+  
+  // Configura botão de salvar projeto
+  const botaoSalvar = document.querySelector("#submitSalvar");
+  if (botaoSalvar) {
+    await setupSaveButton(botaoSalvar);
+  }
 }
 /**
  * Busca operador pelo nome (case-insensitive)
@@ -607,6 +650,263 @@ function configurarBotaoEnvio() {
  * @returns {string} URL completa para o formulário de feedback
  */
 
+/**
+ * Monitora mensagens de um projeto em tempo real
+ * @param {string} projetoId - ID do projeto a monitorar
+ * @param {Function} callback - Função a ser chamada quando houver novas mensagens
+ * @returns {Function} Função para parar o monitoramento
+ */
+function monitorarMensagensEmTempoReal(projetoId, callback) {
+  try {
+    console.log(`👂 Iniciando monitoramento em tempo real do projeto: ${projetoId}`);
+    
+    // Referência às mensagens do projeto
+    const mensagensRef = ref(database, `chats/${projetoId}/mensagens`);
+    
+    // Configura o listener para mudanças
+    const unsubscribe = onChildAdded(mensagensRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const novaMensagem = {
+          id: snapshot.key,
+          ...snapshot.val()
+        };
+        
+        console.log(`📨 Nova mensagem recebida (ID: ${novaMensagem.id})`);
+        
+        // Chama o callback com a nova mensagem
+        if (callback && typeof callback === 'function') {
+          callback(novaMensagem);
+        }
+      }
+    });
+    
+    console.log(`✅ Monitoramento iniciado para projeto ${projetoId}`);
+    
+    // Retorna função para parar o monitoramento
+    return () => {
+      console.log(`🛑 Parando monitoramento do projeto ${projetoId}`);
+      unsubscribe();
+    };
+    
+  } catch (error) {
+    console.error('❌ Erro ao iniciar monitoramento em tempo real:', error);
+    return () => {}; // Retorna função vazia em caso de erro
+  }
+}
+
+/**
+ * Monitora todas as mensagens do projeto e atualiza a tela automaticamente
+ * @param {string} projetoId - ID do projeto
+ * @param {string} operadorId - ID do operador logado (para exibirMensagens)
+ */
+function iniciarMonitoramentoChat(projetoId, operadorId) {
+  console.log(`🚀 Iniciando monitoramento automático do chat ${projetoId}`);
+  
+  // Função para buscar e exibir todas as mensagens
+  const atualizarChat = async () => {
+    try {
+      const mensagens = await buscarMensagensChat(projetoId);
+      exibirMensagens(mensagens, operadorId);
+      console.log(`🔄 Chat atualizado - ${mensagens.length} mensagens`);
+    } catch (error) {
+      console.error('❌ Erro ao atualizar chat:', error);
+    }
+  };
+  
+  // Atualiza imediatamente
+  atualizarChat();
+  
+  // Inicia monitoramento em tempo real
+  const pararMonitoramento = monitorarMensagensEmTempoReal(projetoId, (novaMensagem) => {
+    // Quando receber nova mensagem, atualiza o chat
+    atualizarChat();
+    
+    // Opcional: notificação visual/sonora
+    notificarNovaMensagem(novaMensagem);
+  });
+  
+  // Retorna função para parar o monitoramento
+  return pararMonitoramento;
+}
+
+/**
+ * Função de exemplo para notificar nova mensagem
+ */
+function notificarNovaMensagem(mensagem) {
+  // Aqui você pode adicionar notificações
+  console.log(`🔔 Nova mensagem de ${mensagem.operadorNome || 'Operador'}: ${mensagem.mensagem?.substring(0, 50)}...`);
+  
+  // Exemplo: Adicionar efeito visual
+  if (document.getElementById("messages")) {
+    const chatContainer = document.getElementById("messages");
+    chatContainer.classList.add('bg-blue-50', 'duration-300');
+    setTimeout(() => {
+      chatContainer.classList.remove('bg-blue-50');
+    }, 1000);
+  }
+  
+  // Exemplo: Som de notificação (opcional)
+  // const audio = new Audio('notification-sound.mp3');
+  // audio.play().catch(e => console.log('Som de notificação ignorado'));
+}
+
+/**
+ * Versão simplificada - use no seu OperatorChatDOM
+ */
+async function OperatorChatDOMComRealtime() {
+  atualizarCabecalhoDataHora();
+  
+  const OperatorChatTitleH = document.getElementById("nomedoProjetoOutput");
+  const Id = await retrieveLocal("chatAtual");
+  const OperadorAtual = await retrieveLocal("OperadorNome");
+  
+  const projeto = await getProjectByName(Id);
+  if (!projeto) {
+    console.error('❌ Projeto não encontrado');
+    return;
+  }
+  
+  storeLocal("IdProjetoAtual", projeto.id);
+  const operator = await getOperatorByName(OperadorAtual);
+  
+  // Atualiza título
+  OperatorChatTitleH.innerHTML = projeto.obra;
+  
+  // Busca mensagens iniciais
+  const mensagens = await buscarMensagensChat(projeto.id);
+  exibirMensagens(mensagens, OperadorAtual);
+  
+  // INICIA MONITORAMENTO EM TEMPO REAL
+  const pararMonitoramento = iniciarMonitoramentoChat(projeto.id, OperadorAtual);
+  
+  // Guarda a função para parar quando sair da página
+  storeLocal("pararMonitoramentoChat", pararMonitoramento);
+  
+  // Configura para parar o monitoramento quando sair da página
+  window.addEventListener('beforeunload', () => {
+    const parar = retrieveLocal("pararMonitoramentoChat");
+    if (parar && typeof parar === 'function') {
+      parar();
+    }
+  });
+}
+
+/**
+ * Para uso no gerenteChat também
+ */
+async function setUpMsgsGerenteSemRealtime() {
+  const Id = retrieveLocal("chatAtualId");
+  if (!Id) {
+    console.error('❌ ID do chat não encontrado');
+    return;
+  }
+  
+  // Busca mensagens iniciais
+  const mensagens = await buscarMensagensChat(Id);
+  exibirMensagensGerente(mensagens, null);
+  
+  // Guarda para limpar depois
+  storeLocal("pararMonitoramentoGerente", pararMonitoramento);
+}
+
+/**
+ * Para uso no gerenteChat também
+ */
+async function setUpMsgsGerenteComRealtime() {
+  const Id = retrieveLocal("chatAtualId");
+  if (!Id) {
+    console.error('❌ ID do chat não encontrado');
+    return;
+  }
+  
+  // Busca mensagens iniciais
+  const mensagens = await buscarMensagensChat(Id);
+  exibirMensagensGerente(mensagens, null);
+  
+  
+}
+
+/**
+ * Versão específica para o gerente
+ */
+function iniciarMonitoramentoChatGerente(projetoId) {
+  const atualizarChatGerente = async () => {
+    try {
+      const mensagens = await buscarMensagensChat(projetoId);
+      exibirMensagensGerente(mensagens, null);
+      console.log(`🔄 Chat do gerente atualizado`);
+    } catch (error) {
+      console.error('❌ Erro ao atualizar chat do gerente:', error);
+    }
+  };
+  
+  // Atualiza imediatamente
+  atualizarChatGerente();
+  
+  // Monitora em tempo real
+  return monitorarMensagensEmTempoReal(projetoId, () => {
+    atualizarChatGerente();
+  });
+}
+
+/**
+ * Função genérica para refresh do chat
+ */
+async function refreshChat(projetoId, operadorId = null, isGerente = false) {
+  try {
+    console.log(`🔄 Atualizando chat manualmente...`);
+    
+    const mensagens = await buscarMensagensChat(projetoId);
+    
+    if (isGerente) {
+      exibirMensagensGerente(mensagens, operadorId);
+    } else {
+      exibirMensagens(mensagens, operadorId);
+    }
+    
+    console.log(`✅ Chat atualizado - ${mensagens.length} mensagens`);
+    
+  } catch (error) {
+    console.error('❌ Erro no refresh do chat:', error);
+  }
+}
+
+// ============================================================
+// COMO USAR:
+// ============================================================
+
+/*
+// 1. Substituir no seu initializePage:
+async function initializePage() {
+  // ... código anterior ...
+  
+  if (OperatorChatTitle) await OperatorChatDOMComRealtime(); // Usar a versão com realtime
+  
+  // ... resto do código ...
+}
+
+// 2. No gerenteChat:
+async function setUpMsgsGerente() {
+  await setUpMsgsGerenteComRealtime(); // Usar versão com realtime
+}
+
+// 3. Para atualizar manualmente (botão refresh):
+document.getElementById("refreshBt")?.addEventListener("click", async () => {
+  const projetoId = retrieveLocal("IdProjetoAtual");
+  const operadorId = retrieveLocal("OperadorNome");
+  
+  if (projetoId) {
+    await refreshChat(projetoId, operadorId);
+  }
+});
+*/
+
+// ============================================================
+// IMPORTANTE: Adicionar este import no início do arquivo
+// ============================================================
+// Adicione esta importação junto com as outras do Firebase:
+// import { onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
 function gerarLinkFeedback(projetoId, nomeObra, nomeCliente) {
     // Codifica os parâmetros para que fiquem seguros na URL
     const obraCodificada = encodeURIComponent(nomeObra);
@@ -735,6 +1035,27 @@ function validateProjectData(projectData) {
 }
 
 /**
+ * Scrolla uma div até o final com animação suave
+ * @param {string|HTMLElement} container - ID da div ou elemento HTML
+ */
+function scrollParaFinalSuave(container) {
+  const div = typeof container === 'string' 
+    ? document.getElementById(container) 
+    : container;
+  
+  if (!div) {
+    console.warn('⚠️ Elemento não encontrado para scroll suave');
+    return;
+  }
+  
+  // Scroll com animação suave
+  div.scrollTo({
+    top: div.scrollHeight,
+    behavior: 'smooth'
+  });
+}
+
+/**
  * Limpa formulário após criação
  */
 function clearForm() {
@@ -752,40 +1073,50 @@ function clearForm() {
 /**
  * Exibir mensagens pro gerente
  */
+
 async function setUpMsgsGerente() {
-        // Implementar envio de mensagens
-        const Id = retrieveLocal("ChatAtualId");
-            buscarMensagensChat(Id);
-    const mensagens = await buscarMensagensChat(Id);
-    
-    exibirMensagensGerente(mensagens,null );
-    return;
-          
-    
+  await setUpMsgsGerenteSemRealtime(); // Usar versão com realtime
 }
 
 /**
  * Configura botão de enviar mensagem
- */
-async function setupMessageButton(button) {
-    button.addEventListener("click", async () => {
-        // Implementar envio de mensagens
-        const Id = retrieveLocal("IdProjetoAtual");
-            const OperadorId = retrieveLocal("OperadorSelecionado");
-            const OperadorNome = retrieveLocal("");
-            const operatorMsg = document.getElementById("msgTxt").value;
-            enviarMensagem(Id,OperadorId, OperadorNome, operatorMsg);
-            buscarMensagensChat(Id);
-    const OperadorAtual = await retrieveLocal("OperadorNome");
-    const mensagens = await buscarMensagensChat(Id);
-    
-    exibirMensagens(mensagens,OperadorAtual );
-    return;
-            
-    });
-    
+ */async function setupMessageButton(button) {
+  button.addEventListener("click", async () => {
+    try {
+      const Id = retrieveLocal("IdProjetoAtual");
+      const OperadorId = retrieveLocal("OperadorSelecionado");
+      const OperadorNome = retrieveLocal("OperadorNome");
+      const operatorMsg = document.getElementById("msgTxt")?.value;
+      
+      if (!Id || !OperadorId || !OperadorNome || !operatorMsg) {
+        console.error("❌ Dados insuficientes para enviar mensagem");
+        return;
+      }
+      
+      // Envia mensagem
+      await enviarMensagem(Id, OperadorId, OperadorNome, operatorMsg);
+      
+      // Atualiza mensagens
+      const OperadorAtual = await retrieveLocal("OperadorNome");
+      const mensagens = await buscarMensagensChat(Id);
+      
+      // Verifica se estamos na página correta antes de exibir
+      const chatContainer = document.getElementById("messages");
+      if (chatContainer) {
+        exibirMensagens(mensagens, OperadorAtual);
+      }
+      
+      // Limpa campo de mensagem
+      const msgInput = document.getElementById("msgTxt");
+      if (msgInput) {
+        msgInput.value = '';
+      }
+      
+    } catch (error) {
+      console.error("❌ Erro ao enviar mensagem:", error);
+    }
+  });
 }
-
 // Função para formatar a data e hora atual (para o cabeçalho)
 function formatarDataHoraAtual() {
   const agora = new Date();
@@ -799,7 +1130,7 @@ function formatarDataHoraAtual() {
 
 
 // Função para exibir as mensagens no DOM// Função para exibir as mensagens no DOM
-function exibirMensagens(mensagens, operadorLogadoId) {
+async function exibirMensagens(mensagens, operadorLogadoId) {
   const chatContainer = document.getElementById("messages");
   
   // Limpa o container
@@ -829,12 +1160,13 @@ function exibirMensagens(mensagens, operadorLogadoId) {
     const timeB = b.timestamp || new Date(b.data).getTime() || 0;
     return timeA - timeB;
   });
-
-  mensagensOrdenadas.forEach(mensagem => {
+  
+  mensagensOrdenadas.forEach(async (mensagem) => {
     // Verifica se a mensagem é do operador logado
     const isOperadorLogado = mensagem.operadorId === operadorLogadoId || 
                             mensagem.operadorId === String(operadorLogadoId);
-    
+    console.log(mensagem);
+const nomeOperador = await getNomeOperador(mensagem.operadorId);
     // Formata data e hora
     const dataHoraFormatada = formatarDataHoraMensagem(mensagem.timestamp || mensagem.data);
     
@@ -842,14 +1174,13 @@ function exibirMensagens(mensagens, operadorLogadoId) {
     const nomeOperadorLogado = retrieveLocal("OperadorNome");
     
     // Define nome a exibir
-    const nomeExibido = isOperadorLogado ? 
-      (nomeOperadorLogado || "Você") : 
-      (mensagem.operadorNome || 'Operador');
+    const nomeExibido = nomeOperador ? nomeOperador : "Operador";
 
     // Cria elemento da mensagem - SEMPRE alinhado à direita
     const mensagemElement = document.createElement('div');
     mensagemElement.className = 'flex items-end gap-3 justify-end mb-3';
-
+    if (mensagem.mensagem) {
+        
     // Cria o HTML da mensagem - SEMPRE com fundo laranja (primary)
     mensagemElement.innerHTML = `
       <div class="flex flex-col gap-1 items-end">
@@ -866,12 +1197,13 @@ function exibirMensagens(mensagens, operadorLogadoId) {
     `;
 
     chatContainer.appendChild(mensagemElement);
+    }
   });
+  scrollParaFinalSuave('messages');
 
-  // Rola para a última mensagem
-  setTimeout(() => {
+  if (chatContainer) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
-  }, 100);
+  }
 }
 
 // Função para exibir as mensagens no DOM// Função para exibir as mensagens no DOM
@@ -938,11 +1270,11 @@ function exibirMensagensGerente(mensagens, operadorLogadoId) {
 
     chatContainer.appendChild(mensagemElement);
   });
+  scrollParaFinalSuave('messages');
 
-  // Rola para a última mensagem
-  setTimeout(() => {
+  if (chatContainer) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
-  }, 100);
+  }
 }
 // Função auxiliar para formatar data/hora das mensagens
 function formatarDataHoraMensagem(timestamp) {
@@ -1348,7 +1680,27 @@ async function IniciarDataList() {
 // ============================================================
 // FUNÇÕES DE CHAT/MENSAGENS
 // ============================================================
-
+/**
+ * Busca operador pelo ID e retorna apenas o nome
+ * @param {string} operadorId - ID do operador
+ * @returns {Promise<string|null>} - Nome do operador ou null se não encontrar
+ */
+async function getNomeOperador(operadorId) {
+  try {
+    console.log(operadorId);
+    const path = ref(database, `operadores/${operadorId}`)
+    const snap = await get(path);
+    if (snap.exists()) {
+        const valor =  snap.val();
+        console.log(valor);
+        return valor.nome;
+    }
+    return null;
+  } catch (error) {
+    console.error(`❌ Erro ao buscar operador ${operadorId}:`, error);
+    return null;
+  }
+}
 /**
  * Envia mensagem para o chat de um projeto
  */
@@ -1375,6 +1727,10 @@ async function enviarMensagem(projetoId, operadorId, operadorNome, textoMensagem
             ultimoOperador: mensagemCompleta.operadorNome
         });
 
+  const chatContainer = document.getElementById("messages");
+  
+  // Limpa o container
+  chatContainer.innerHTML = '';
         return {
             success: true,
             mensagemId: novaMensagemRef.key,
