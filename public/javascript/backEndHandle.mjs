@@ -906,23 +906,19 @@ document.getElementById("refreshBt")?.addEventListener("click", async () => {
 // ============================================================
 // Adicione esta importação junto com as outras do Firebase:
 // import { onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-
-function gerarLinkFeedback(projetoId, nomeObra, nomeCliente) {
-    // Codifica os parâmetros para que fiquem seguros na URL
+/**
+ * Função simplificada que sempre funciona
+ */
+function gerarLinkFeedbackSimples(projetoId, nomeObra, nomeCliente) {
     const obraCodificada = encodeURIComponent(nomeObra);
     const clienteCodificado = encodeURIComponent(nomeCliente);
     
-    // Supondo que o formulário de feedback está em 'feedback.html'
-    const baseUrl = window.location.origin + window.location.pathname;
-    // Se o formulário estiver em uma página específica, ajuste:
-    const feedbackPage = 'feedback.html'; // ou o caminho correto
+    // URL relativa simples - funciona em qualquer ambiente
+    const url = `./feedback.html?id=${projetoId}&obra=${obraCodificada}&cliente=${clienteCodificado}`;
     
-    // Constrói a URL com parâmetros
-    const url = `${feedbackPage}?id=${projetoId}&obra=${obraCodificada}&cliente=${clienteCodificado}`;
-    console.log("", url);
+    console.log("📄 Link simples gerado:", url);
     return url;
 }
-
 /**
  * Inicializa todo o sistema de feedback
  */
@@ -1583,7 +1579,7 @@ async function HANDLEOBRASDOM() {
                         <p><span class="font-bold">Status:</span> ${element.status == 0 ? "🟢 Em andamento" : "✅ Finalizado"}</p>
                         <p><span class="font-bold">Criado em:</span> ${element.Criado}"}</p>
                         
-                        <a><span class="font-bold">Link do projeto:</span> ${element.linkReview}"}</a>
+                        <a class="font-bold" href="${element.linkReview}">${element.linkReview}"}</a>
                         <p><span class="font-bold">Operadores:</span> ${operadoresFormatados}</p>
                         ${element.cliente ? `<p><span class="font-bold">Cliente:</span> ${element.cliente}</p>` : ''}
                     </div>
@@ -2189,7 +2185,7 @@ async function addProject(projectData, managerId) {
         }
         
         const projectRef = ref(database, `projetos/${projectId}`);
-        const linkPj = await gerarLinkFeedback(projectId, projectData.obra, nomeClienteReal);
+        const linkPj = await gerarLinkFeedbackSimples(projectId, projectData.obra, nomeClienteReal);
         // 3. Prepara objeto do projeto
         const project = {
             ...projectData,
