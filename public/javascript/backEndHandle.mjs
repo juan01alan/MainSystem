@@ -1082,12 +1082,9 @@ async function setUpMsgsGerente() {
       const Id = retrieveLocal("IdProjetoAtual");
       const OperadorId = retrieveLocal("OperadorSelecionado");
       const OperadorNome = retrieveLocal("OperadorNome");
-      const operatorMsg = document.getElementById("msgTxt")?.value;
+      const operatorMsg = document.getElementById("msgTxt").value;
       
-      if (!Id || !OperadorId || !OperadorNome || !operatorMsg) {
-        console.error("❌ Dados insuficientes para enviar mensagem");
-        return;
-      }
+      
       
       // Envia mensagem
       await enviarMensagem(Id, OperadorId, OperadorNome, operatorMsg);

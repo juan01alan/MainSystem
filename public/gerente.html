@@ -121,7 +121,7 @@
 <p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal pb-2">Operadores Envolvidos</p>
 <div class="relative flex items-center">
 <input
-list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary p-4 pr-14 text-base font-normal leading-normal" placeholder="Nome do operador">
+list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary p-4 pr-14 text-base font-normal leading-normal" placeholder="Nome do operador" onkeypress="return blockSpecialChar(event)">
 
 
 <datalist id="operatorsDL">
@@ -155,7 +155,7 @@ list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 fle
          bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary 
          border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary 
          h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary 
-         p-4 text-base font-normal leading-normal"
+         p-4 text-base font-normal leading-normal" onkeypress="return blockSpecialChar(event)"
 />
 
 <datalist id="clientesDL">
