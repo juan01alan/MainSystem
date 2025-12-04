@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Todas Obras</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="./css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#4B341C",
+          "background": "#f8f7f6",
+        },
+        fontFamily: {
+          "display": ["Manrope", "sans-serif"]
+        },
+        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  body {
+    min-height: max(884px, 100dvh);
+  }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col items-center group/design-root overflow-x-hidden">
+  
+  <!-- Header -->
+  <div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 w-full">
+    <div class="flex-1 text-center">
+      <h1 class="text-2xl font-bold text-primary dark:text-neutral-50">Obras</h1>
+    </div>
+  </div>
+
+  <!-- Container principal para as obras (CENTRALIZADO) -->
+  <main class="w-full flex flex-col items-center px-4 py-6 flex-1">
+    <div id="divToObras" class="w-full max-w-4xl flex flex-col items-center space-y-6">
+      <!-- As obras serão inseridas aqui pelo JavaScript -->
+    </div>
+  </main>
+
+</div>
+
+<script>
+  
+/**
+ * Recarrega a página atual
+ * @param {boolean} forceGet - Se true, força recarregamento do servidor (ignora cache)
+ */
+function refreshPage(forceGet = false) {
+    if (forceGet) {
+        // Força recarregamento do servidor (ignora cache)
+        window.location.reload(true);
+    } else {
+        // Recarrega da cache (padrão)
+        window.location.reload();
+    }
+}
+</script>
+<script src="./javascript/backEndHandle.mjs" type="module"></script>
+<script src="./javascript/feedback.js"></script>
+<script src="./javascript/firebase.mjs" type="module"></script>
+<script type="module" src="./javascript/firebase.mjs"></script>
+<script src="./javascript/main.js"></script>
+</body>
+</html>

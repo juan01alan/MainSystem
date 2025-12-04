@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-br">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Obras Atuais do Operador</title>
+<link rel="stylesheet" href="./css/main.css">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0..200" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }
+    
+    /* Estilos adicionais */
+    body {
+      min-height: max(884px, 100dvh);
+      font-family: 'Inter', sans-serif;
+    }
+    
+    /* Estilo para os botões de obras */
+    .obra-button {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+      height: 4rem; /* 64px padrão */
+      width: 100%;
+      max-width: 28rem; /* 448px */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #4B341C;
+      color: white;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .obra-button:hover {
+      background-color: #3a2815;
+      transform: translateY(-1px);
+    }
+    
+    .obra-button:active {
+      transform: translateY(0);
+    }
+    
+    /* Responsividade para altura */
+    @media (min-width: 768px) {
+      .obra-button {
+        height: 5rem; /* 80px em telas maiores */
+      }
+    }
+    
+    /* Container centralizado */
+    .content-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: calc(100vh - 4rem); /* Altura total menos header */
+    }
+  </style>
+</head>
+<body class="font-display bg-background text-text">
+<div class="relative min-h-screen w-full group/design-root overflow-x-hidden">
+<header class="flex items-center bg-surface p-4 pb-2 justify-between sticky top-0 z-10 border-b border-border">
+<h1 class="text-primary text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Obras Atuais</h1>
+    <!-- Botão de Refresh -->
+    <button onclick="refreshPage()" id="refreshBt" class="flex size-10 shrink-0 items-center justify-center text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-2xl">
+        refresh
+      </span>
+    </button>
+</header>
+
+<main class="content-center w-full px-4 py-6" id="minhasObrasScreen">
+  <!-- Container para centralizar o conteúdo -->
+  <div class="w-full flex flex-col items-center space-y-4">
+    <!-- O conteúdo será inserido aqui pelo JavaScript -->
+  </div>
+</main>
+
+</div>
+
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#4B341C",
+            "background": "#f8f7f6",
+            "surface": "#ffffff",
+            "text": "#181411",
+            "text-secondary": "#897561",
+            "border": "#e6e0db"
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "0.75rem",
+            "xl": "1rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+
+<script>
+  
+/**
+ * Recarrega a página atual
+ * @param {boolean} forceGet - Se true, força recarregamento do servidor (ignora cache)
+ */
+function refreshPage(forceGet = false) {
+    if (forceGet) {
+        // Força recarregamento do servidor (ignora cache)
+        window.location.reload(true);
+    } else {
+        // Recarrega da cache (padrão)
+        window.location.reload();
+    }
+}
+</script>
+<script src="./javascript/backEndHandle.mjs" type="module"></script>
+<script src="./javascript/feedback.js"></script>
+<script src="./javascript/firebase.mjs" type="module"></script>
+<script type="module" src="./javascript/firebase.mjs"></script>
+<script src="./javascript/main.js"></script>
+
+</body>
+</html>
