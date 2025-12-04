@@ -121,7 +121,7 @@
 <p class="text-text-light-primary dark:text-text-dark-primary text-base font-medium leading-normal pb-2">Operadores Envolvidos</p>
 <div class="relative flex items-center">
 <input
-list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary p-4 pr-14 text-base font-normal leading-normal" placeholder="Nome do operador" onkeypress="return blockSpecialChar(event)">
+list="operatorsDL" id="operadortolist" class="apenas-texto form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary p-4 pr-14 text-base font-normal leading-normal" placeholder="Nome do operador" >
 
 
 <datalist id="operatorsDL">
@@ -151,11 +151,11 @@ list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 fle
   id="nomeCliente"
   name="nomeCliente"
   placeholder="Nome completo"
-  class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg 
+  class=" apenas-texto flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg 
          bg-surface-light dark:bg-surface-dark text-text-light-primary dark:text-text-dark-primary 
          border border-border-light dark:border-border-dark focus:border-primary focus:ring-primary 
          h-14 placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary 
-         p-4 text-base font-normal leading-normal" onkeypress="return blockSpecialChar(event)"
+         p-4 text-base font-normal leading-normal" 
 />
 
 <datalist id="clientesDL">
@@ -183,6 +183,29 @@ list="operatorsDL" id="operadortolist" class="form-input flex w-full min-w-0 fle
     
     <script src="./javascript/main.js"></script>
     <script type="text/javascript">
+
+  // Para múltiplos inputs
+  const input1 = document.getElementById("nomeCliente");
+  input1.addEventListener("input", function(event) {
+    
+            const input = event.target;
+            // Substitui caracteres não alfanuméricos por uma string vazia
+            input.value = input.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+  })
+  
+
+  const input2 = document.getElementById("operadortolist");
+  input2.addEventListener("input", function(event) {
+    
+            const input = event.target;
+            // Substitui caracteres não alfanuméricos por uma string vazia
+            input.value = input.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+  })
+  
+      
+function apenasLetrasEEspacos(elemento) {
+  return 
+}
     function blockSpecialChar(e){
         var k;
         document.all ? k = e.keyCode : k = e.which;
