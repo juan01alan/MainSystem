@@ -32,7 +32,8 @@ async function initializePage() {
   const isOperatorsPage = document.getElementById("operatorList");
   const isMinhasObrasPage = document.getElementById("minhasObrasScreen");
   const isFeedbackPage = document.getElementById("submitFeedback");
-  
+  const emAndamentoBt = document.getElementById("emAndamentoBt");
+  const concluidoBt = document.getElementById("concluidoBt");
   console.log("🔍 Detecção de páginas:", {
     isOperatorChatPage,
     isGerenteChatPage,
@@ -42,6 +43,9 @@ async function initializePage() {
     isFeedbackPage
   });
   
+  if (emAndamentoBt) {
+    inicializeBtsStatus();
+  }
   // Inicializa feedback se estiver na página de feedback
   if (isFeedbackPage) {
     console.log("📝 Inicializando sistema de feedback");
@@ -94,6 +98,53 @@ async function initializePage() {
   const botaoSalvar = document.querySelector("#submitSalvar");
   if (botaoSalvar) {
     await setupSaveButton(botaoSalvar);
+  }
+}
+
+async function inicializeBtsStatus(){
+    const chatAtual = retrieveLocal("chatAtual");
+    const projeto = await getProjectByName(chatAtual);
+    console.log('chat atual: ', projeto);
+    const emAndamentoBt = document.getElementById("emAndamentoBt");
+  const concluidoBt = document.getElementById("concluidoBt");
+  emAndamentoBt.addEventListener('change',()=>{
+    
+        const confirmacao = confirm(`Confirmar mudança para em Andamento?`);
+        
+        if (confirmacao) {
+            
+            emAndamentoBt.checked = true;
+            atualizarProjeto(projeto.id, 'status', 0)
+        } else{
+            emAndamentoBt.checked = false;
+        }
+  });
+  concluidoBt.addEventListener('change',()=>{
+
+        const confirmacao = confirm(`Confirmar mudança concluido?`);
+        
+        if (confirmacao) {
+            
+            concluidoBt.checked = true;
+            atualizarProjeto(projeto.id, 'status', 1)
+        } else{
+            concluidoBt.checked = false;
+            
+        }
+
+  });
+
+}
+
+// Alterar uma chave especifica num projeto id especifico
+async function atualizarProjeto(id, campo, valor) {
+  try {
+    await update(ref(database, `projetos/${id}`), { [campo]: valor });
+    console.log(`✅ ${campo} = ${valor}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ ${error.message}`);
+    return false;
   }
 }
 /**
@@ -643,14 +694,6 @@ function configurarBotaoEnvio() {
     });
 }
 /**
- * Gera o link de feedback para um projeto específico
- * @param {string} projetoId - ID do projeto
- * @param {string} nomeObra - Nome da obra
- * @param {string} nomeCliente - Nome do cliente
- * @returns {string} URL completa para o formulário de feedback
- */
-
-/**
  * Monitora mensagens de um projeto em tempo real
  * @param {string} projetoId - ID do projeto a monitorar
  * @param {Function} callback - Função a ser chamada quando houver novas mensagens
@@ -749,48 +792,6 @@ function notificarNovaMensagem(mensagem) {
   // const audio = new Audio('notification-sound.mp3');
   // audio.play().catch(e => console.log('Som de notificação ignorado'));
 }
-
-/**
- * Versão simplificada - use no seu OperatorChatDOM
- */
-async function OperatorChatDOMComRealtime() {
-  atualizarCabecalhoDataHora();
-  
-  const OperatorChatTitleH = document.getElementById("nomedoProjetoOutput");
-  const Id = await retrieveLocal("chatAtual");
-  const OperadorAtual = await retrieveLocal("OperadorNome");
-  
-  const projeto = await getProjectByName(Id);
-  if (!projeto) {
-    console.error('❌ Projeto não encontrado');
-    return;
-  }
-  
-  storeLocal("IdProjetoAtual", projeto.id);
-  const operator = await getOperatorByName(OperadorAtual);
-  
-  // Atualiza título
-  OperatorChatTitleH.innerHTML = projeto.obra;
-  
-  // Busca mensagens iniciais
-  const mensagens = await buscarMensagensChat(projeto.id);
-  exibirMensagens(mensagens, OperadorAtual);
-  
-  // INICIA MONITORAMENTO EM TEMPO REAL
-  const pararMonitoramento = iniciarMonitoramentoChat(projeto.id, OperadorAtual);
-  
-  // Guarda a função para parar quando sair da página
-  storeLocal("pararMonitoramentoChat", pararMonitoramento);
-  
-  // Configura para parar o monitoramento quando sair da página
-  window.addEventListener('beforeunload', () => {
-    const parar = retrieveLocal("pararMonitoramentoChat");
-    if (parar && typeof parar === 'function') {
-      parar();
-    }
-  });
-}
-
 /**
  * Para uso no gerenteChat também
  */
@@ -809,97 +810,6 @@ async function setUpMsgsGerenteSemRealtime() {
   storeLocal("pararMonitoramentoGerente", pararMonitoramento);
 }
 
-/**
- * Para uso no gerenteChat também
- */
-async function setUpMsgsGerenteComRealtime() {
-  const Id = retrieveLocal("chatAtualId");
-  if (!Id) {
-    console.error('❌ ID do chat não encontrado');
-    return;
-  }
-  
-  // Busca mensagens iniciais
-  const mensagens = await buscarMensagensChat(Id);
-  exibirMensagensGerente(mensagens, null);
-  
-  
-}
-
-/**
- * Versão específica para o gerente
- */
-function iniciarMonitoramentoChatGerente(projetoId) {
-  const atualizarChatGerente = async () => {
-    try {
-      const mensagens = await buscarMensagensChat(projetoId);
-      exibirMensagensGerente(mensagens, null);
-      console.log(`🔄 Chat do gerente atualizado`);
-    } catch (error) {
-      console.error('❌ Erro ao atualizar chat do gerente:', error);
-    }
-  };
-  
-  // Atualiza imediatamente
-  atualizarChatGerente();
-  
-  // Monitora em tempo real
-  return monitorarMensagensEmTempoReal(projetoId, () => {
-    atualizarChatGerente();
-  });
-}
-
-/**
- * Função genérica para refresh do chat
- */
-async function refreshChat(projetoId, operadorId = null, isGerente = false) {
-  try {
-    console.log(`🔄 Atualizando chat manualmente...`);
-    
-    const mensagens = await buscarMensagensChat(projetoId);
-    
-    if (isGerente) {
-      exibirMensagensGerente(mensagens, operadorId);
-    } else {
-      exibirMensagens(mensagens, operadorId);
-    }
-    
-    console.log(`✅ Chat atualizado - ${mensagens.length} mensagens`);
-    
-  } catch (error) {
-    console.error('❌ Erro no refresh do chat:', error);
-  }
-}
-
-// ============================================================
-// COMO USAR:
-// ============================================================
-
-/*
-// 1. Substituir no seu initializePage:
-async function initializePage() {
-  // ... código anterior ...
-  
-  if (OperatorChatTitle) await OperatorChatDOMComRealtime(); // Usar a versão com realtime
-  
-  // ... resto do código ...
-}
-
-// 2. No gerenteChat:
-async function setUpMsgsGerente() {
-  await setUpMsgsGerenteComRealtime(); // Usar versão com realtime
-}
-
-// 3. Para atualizar manualmente (botão refresh):
-document.getElementById("refreshBt")?.addEventListener("click", async () => {
-  const projetoId = retrieveLocal("IdProjetoAtual");
-  const operadorId = retrieveLocal("OperadorNome");
-  
-  if (projetoId) {
-    await refreshChat(projetoId, operadorId);
-  }
-});
-*/
 
 // ============================================================
 // IMPORTANTE: Adicionar este import no início do arquivo
@@ -998,7 +908,7 @@ async function setupSaveButton(botaoSalvar) {
 }
 
 /**
- * Coleta dados do formulário
+ * Coleta dados do formulário na criação da obra
  */
 function collectFormData() {
     operatorList = vo(); // Obtém lista de operadores selecionados
@@ -1052,7 +962,7 @@ function scrollParaFinalSuave(container) {
 }
 
 /**
- * Limpa formulário após criação
+ * Limpa formulário após criação do projeto
  */
 function clearForm() {
     document.getElementById("nomedaobra").value = "";
@@ -1314,12 +1224,7 @@ function atualizarCabecalhoDataHora() {
     dataHoratxt.textContent = `HOJE: ${formatarDataHoraAtual()}`;
   }
 }
-// Exemplo de uso:
-// Suponha que temos o projetoId e o operadorLogadoId
-// const projetoId = 123;
-// const operadorLogadoId = 456;
-// const mensagens = await buscarMensagensChat(projetoId);
-// exibirMensagens(mensagens, operadorLogadoId);
+
 
 // Para atualizar o cabeçalho com a data atual (como no exemplo original)
 const dataHoratxt = document.getElementById("horadataTxt");
@@ -1353,58 +1258,8 @@ async function getOperatorProjects(operatorId) {
         console.error(`❌ Erro ao buscar projetos:`, error);
         return [];
     }
-}/**
- * Busca operadores pelo nome (case-insensitive)
- * @param {string} nome - Nome do operador a buscar
- * @returns {Promise<Array>} - Array de operadores encontrados
- */
-async function buscarOperadoresPorNome(nome) {
-    try {
-        console.log(`🔍 Buscando operadores com nome: "${nome}"`);
-        
-        if (!nome || typeof nome !== 'string' || nome.trim() === '') {
-            console.log('⚠️ Nome inválido para busca');
-            return [];
-        }
-        
-        const nomeBusca = nome.trim().toLowerCase();
-        const operadoresRef = ref(database, 'operadores');
-        const snapshot = await get(operadoresRef);
-        
-        if (!snapshot.exists()) {
-            console.log('📭 Nenhum operador encontrado no banco');
-            return [];
-        }
-        
-        const operadores = snapshot.val();
-        const resultados = [];
-        
-        // Percorre todos os operadores
-        for (const operadorId in operadores) {
-            const operador = operadores[operadorId];
-            
-            // Verifica se o operador tem nome e corresponde à busca
-            if (operador.nome && typeof operador.nome === 'string') {
-                const nomeOperador = operador.nome.toLowerCase();
-                
-                // Busca exata ou parcial
-                if (nomeOperador === nomeBusca || nomeOperador.includes(nomeBusca)) {
-                    resultados.push({
-                        id: operadorId,
-                        ...operador
-                    });
-                }
-            }
-        }
-        
-        console.log(`✅ Encontrados ${resultados.length} operadores`);
-        return resultados;
-        
-    } catch (error) {
-        console.error('❌ Erro ao buscar operadores:', error);
-        return [];
-    }
 }
+
 
 async function handleOperatorsObra() {
     const OperatorAtual = retrieveLocal("OperadorSelecionado");
@@ -1514,19 +1369,6 @@ async function getProjectData(projectId) {
     } catch (error) {
         console.error(`💥 Erro ao buscar projeto:`, error);
         return null;
-    }
-}
-/**
- * Recarrega a página atual
- * @param {boolean} forceGet - Se true, força recarregamento do servidor (ignora cache)
- */
-function refreshPage(forceGet = false) {
-    if (forceGet) {
-        // Força recarregamento do servidor (ignora cache)
-        window.location.reload(true);
-    } else {
-        // Recarrega da cache (padrão)
-        window.location.reload();
     }
 }
 /**
@@ -1858,13 +1700,6 @@ async function getNextProjectId() {
     }
 }
 
-// ============================================================
-// FUNÇÕES DE VERIFICAÇÃO E CRIAÇÃO
-// ============================================================
-
-/**
- * Verifica se operador já existe pelo nome
- */
 async function buscarOperadorPorNome(nome) {
     try {
         const operadoresRef = ref(database, 'operadores');
@@ -2048,16 +1883,6 @@ async function criarOuAtualizarCliente(nomeCliente, projetoId, projetoData) {
         };
     }
 }
-
-// ============================================================
-// FUNÇÃO PRINCIPAL - CRIAR PROJETO (CORRIGIDA)
-// ============================================================
-
-/**
- * Cria um novo projeto (versão corrigida)
- */// ============================================================
-// FUNÇÃO PRINCIPAL - CRIAR/ATUALIZAR PROJETO
-// ============================================================
 
 /**
  * Extrai apenas o nome real removendo sufixos e IDs
@@ -2452,126 +2277,7 @@ async function buscarTodosClientes() {
     }
 }
 
-// ============================================================
-// FUNÇÕES DE UPLOAD E ATUALIZAÇÕES
-// ============================================================
 
-/**
- * Faz upload de imagem para Storage
- */
-async function uploadImage(imageFile, projectId) {
-    try {
-        const imageRef = storageRef(storage, `projectUpdates/${projectId}/${Date.now()}_${imageFile.name}`);
-        const snapshot = await uploadBytes(imageRef, imageFile);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        console.log(`📸 Imagem enviada: ${downloadURL}`);
-        return downloadURL;
-    } catch (error) {
-        console.error('❌ Erro no upload de imagem:', error);
-        throw error;
-    }
-}
-
-/**
- * Adiciona atualização ao projeto
- */
-async function addProjectUpdate(projectId, operatorId, operatorName, message, imageFile) {
-    try {
-        let imageUrl = null;
-        
-        if (imageFile) {
-            imageUrl = await uploadImage(imageFile, projectId);
-        }
-        
-        const updatesRef = ref(database, 'projectUpdates');
-        const newUpdateRef = push(updatesRef);
-        const updateId = newUpdateRef.key;
-        
-        const updateData = {
-            projectId,
-            operatorId,
-            operatorName,
-            message: message || '',
-            imageUrl,
-            timestamp: new Date().toISOString()
-        };
-        
-        await set(newUpdateRef, updateData);
-        console.log(`📝 Atualização enviada: ${updateId}`);
-        return updateId;
-    } catch (error) {
-        console.error('❌ Erro ao adicionar atualização:', error);
-        throw error;
-    }
-}
-
-/**
- * Busca atualizações do projeto
- */
-async function getProjectUpdates(projectId) {
-    try {
-        const updatesRef = ref(database, 'projectUpdates');
-        const snapshot = await get(updatesRef);
-        
-        const updates = [];
-        snapshot.forEach((childSnapshot) => {
-            const update = childSnapshot.val();
-            if (update.projectId === projectId) {
-                updates.push({
-                    id: childSnapshot.key,
-                    ...update
-                });
-            }
-        });
-        
-        updates.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        console.log(`📊 ${updates.length} atualizações encontradas`);
-        return updates;
-    } catch (error) {
-        console.error('❌ Erro ao buscar atualizações:', error);
-        return [];
-    }
-}
-
-// ============================================================
-// FUNÇÕES DE ASSOCIAÇÃO DE PROJETOS (SIMPLIFICADAS)
-// ============================================================
-
-/**
- * Associa projeto a operador (versão simplificada)
- */
-async function associarProjetoAoOperador(operadorId, projetoId, projetoData) {
-    try {
-        const projetoRef = ref(database, `operadores/${operadorId}/projetos/${projetoId}`);
-        
-        // Verifica se já existe
-        const snapshot = await get(projetoRef);
-        if (snapshot.exists()) {
-            console.log(`ℹ️ Projeto já associado ao operador ${operadorId}`);
-            return { success: true, exists: true };
-        }
-        
-        // Cria associação
-        const projetoInfo = {
-            id: projetoId,
-            obra: projetoData.obra,
-            dataAssociacao: new Date().toISOString(),
-            status: 'ativo'
-        };
-        
-        await set(projetoRef, projetoInfo);
-        console.log(`✅ Projeto associado ao operador ${operadorId}`);
-        
-        return { success: true, exists: false };
-    } catch (error) {
-        console.error(`❌ Erro ao associar projeto:`, error);
-        return { success: false, error: error.message };
-    }
-}
-
-/**
- * Remove projeto de operador
- */
 async function removerProjetoDoOperador(operadorId, projetoId) {
     try {
         const projetoRef = ref(database, `operadores/${operadorId}/projetos/${projetoId}`);
