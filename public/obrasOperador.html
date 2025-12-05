@@ -82,7 +82,7 @@
 <label class="flex flex-col min-w-40 h-12 w-full">
 <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
 <div class="text-zinc-500 dark:text-zinc-400 flex border border-zinc-300 dark:border-zinc-700 bg-background-light dark:bg-zinc-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
-<button id="inputObraSearch">
+<button id="searchObraOperador">
 
   <span class="material-symbols-outlined">search</span>
 </button>
@@ -93,7 +93,7 @@
 </div>
 <main class="content-center w-full px-4 py-6" id="minhasObrasScreen">
   <!-- Container para centralizar o conteúdo -->
-  <div class="w-full flex flex-col items-center space-y-4">
+  <div class="w-full flex flex-col items-center space-y-4" id="containerObrasOperator">
     <!-- O conteúdo será inserido aqui pelo JavaScript -->
   </div>
 </main>
@@ -165,8 +165,8 @@ inputObraSearch.addEventListener('input', function(e) {
  */
 function filtrarOperadores(inputValue) {
     // Seleciona o container e todas as divs filhas
-    const operatorList = document.getElementById('minhasObrasScreen');
-    const divs = operatorList.querySelectorAll(':scope > div'); // Apenas divs filhas diretas
+    const operatorList = document.getElementById('containerObrasOperator');
+    const divs = operatorList.querySelectorAll(':scope > button'); // Apenas divs filhas diretas
     
     // Converte o valor do input para minúsculas e remove espaços
     const searchText = inputValue.toLowerCase().trim();
@@ -196,8 +196,8 @@ function filtrarOperadores(inputValue) {
  * @param {string} inputValue - Valor do input de busca
  */
 function filtrarOperadoresPorTexto(inputValue) {
-    const operatorList = document.getElementById('operatorList');
-    const divs = operatorList.querySelectorAll(':scope > div');
+    const operatorList = document.getElementById('containerObrasOperator');
+    const divs = operatorList.querySelectorAll(':scope > button');
     const searchText = inputValue.toLowerCase().trim();
     
     divs.forEach(div => {

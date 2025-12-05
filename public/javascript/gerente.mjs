@@ -35,6 +35,9 @@ function removeItem(elementId) {
 function addOperators() {
     
     const operatorToList = document.getElementById("operadortolist");
+    if (operatorToList.value == '') {
+        return;
+    }
     const operatorNew = operatorToList.value;
     operatorToList.value = '';
     const operatorsCards = document.getElementById("operatorsCards");
@@ -62,6 +65,19 @@ function viewOperator() {
 document.addEventListener("DOMContentLoaded", () => {
     const botaoSalvar = document.querySelector("header button"); // botão do topo “Salvar”
     
+    const input = document.getElementById('operatorsDL');
+
+    if (input) {
+// 2. Adicionar o ouvinte de eventos para 'keydown' (ou 'keyup')
+input.addEventListener('keydown', function(event) {
+  // 3. Verificar se a tecla pressionada é a 'Enter'
+  if (event.key === 'Enter') {
+    addOperators();
+  }
+});
+        
+    }
+
     const botaoListaOperator = document.getElementById("submitOperator");
     if (botaoListaOperator != null) {
         

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="light" lang="pt">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Cadastrar Operador</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4B341C",
+                        "secondary": "#DEB887",
+                        "text-primary": "#3D2B1F",
+                        "text-secondary": "#856d4b",
+                        "background": "#ffff",
+                        "input-border": "#E0D6C3",
+                        "input-bg": "#FFFFFF",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+    <div class="main">
+        <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+            <!-- Top App Bar -->
+            <div class="sticky top-0 z-10 flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between border-b border-input-border-light dark:border-input-border-dark">
+                <div class="text-text-primary dark:text-background-light flex size-10 shrink-0 items-center justify-center">
+                    <!-- Ícone opcional -->
+                </div>
+                <h2 class="text-text-primary dark:text-background-light text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Cadastro de Operador</h2>
+                <div class="flex size-10 shrink-0 items-center justify-center"></div>
+            </div>
+
+            <main class="flex-1 px-4 py-6">
+                <!-- Headline -->
+                <h1 class="text-text-primary dark:text-background-light tracking-tight text-[32px] font-bold leading-tight text-left pb-1">Cadastrar Novo Operador</h1>
+                <p class="text-text-secondary dark:text-secondary text-base font-normal leading-normal pb-6">Preencha os dados do operador abaixo.</p>
+
+                <!-- Formulário de Cadastro -->
+                <div class="space-y-6">
+                    <!-- Campo: Nome Completo -->
+                    <div class="space-y-4">
+                        <h3 class="text-text-primary dark:text-background-light text-xl font-semibold leading-normal">Dados do Operador</h3>
+                        
+                        <label class="flex flex-col w-full">
+                            <p class="text-text-primary dark:text-secondary text-base font-medium leading-normal pb-2">NOME COMPLETO *</p>
+                            <input id="nomeOperador" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark h-14 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal" placeholder="Insira o nome completo do operador" required/>
+                        </label>
+
+                        <!-- Campo: Data de Cadastro -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-text-primary dark:text-secondary text-base font-medium leading-normal pb-2">DATA DE CADASTRO *</p>
+                            <input id="dataCadastro" type="date" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark h-14 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal" readonly required/>
+                        </label>
+
+                        <!-- Campo: Competências -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-text-primary dark:text-secondary text-base font-medium leading-normal pb-2">COMPETÊNCIAS *</p>
+                            <div class="relative">
+                                <textarea id="competencias" class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark min-h-32 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal" placeholder="Descreva as competências do operador (separadas por vírgula ou linha)" required></textarea>
+                                <div class="absolute bottom-3 right-3 text-xs text-text-secondary/70">
+                                    <span id="contadorCaracteres">0</span>/500
+                                </div>
+                            </div>
+                            <p class="text-sm text-text-secondary/70 mt-2">Exemplo: Operação de máquinas pesadas, Leitura de projetos, Segurança do trabalho</p>
+                        </label>
+
+                        <!-- Campo adicional opcional para status -->
+                        <label class="flex flex-col w-full">
+                            <p class="text-text-primary dark:text-secondary text-base font-medium leading-normal pb-2">STATUS</p>
+                            <select id="statusOperador" class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark h-14 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal">
+                                <option value="ativo" selected>Ativo</option>
+                                <option value="inativo">Inativo</option>
+                                <option value="ferias">Férias</option>
+                                <option value="treinamento">Em Treinamento</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Informações importantes -->
+                <div class="mt-8 p-4 bg-secondary/10 rounded-lg border border-secondary/20">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-primary text-lg">info</span>
+                        <div>
+                            <p class="text-text-primary font-medium text-sm">Informações importantes:</p>
+                            <ul class="text-text-secondary text-sm mt-1 list-disc list-inside space-y-1">
+                                <li>Campos marcados com * são obrigatórios</li>
+                                <li>A data de cadastro é preenchida automaticamente</li>
+                                <li>As competências serão utilizadas para atribuição de atividades</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer com botão de ação -->
+            <footer class="sticky bottom-0 z-10 space-y-4 bg-background-light dark:bg-background-dark p-4 pt-2 border-t border-input-border-light dark:border-input-border-dark">
+                <div class="flex gap-3">
+                    <button id="btnCancelar" class="flex h-14 flex-1 items-center justify-center gap-x-2 rounded-xl border-2 border-primary px-6 text-base font-bold text-primary shadow-sm transition-all duration-200 hover:bg-primary/5 active:scale-95">
+                        Cancelar
+                    </button>
+                    <button id="btnSalvar" class="flex h-14 flex-1 items-center justify-center gap-x-2 rounded-xl bg-primary px-6 text-base font-bold text-white shadow-sm transition-all duration-200 hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
+                        <span class="material-symbols-outlined text-lg">save</span>
+                        Salvar Operador
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Configurar data atual automaticamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data atual no formato YYYY-MM-DD
+            const hoje = new Date();
+            const dataFormatada = hoje.toISOString().split('T')[0];
+            document.getElementById('dataCadastro').value = dataFormatada;
+
+            // Contador de caracteres para competências
+            const textareaCompetencias = document.getElementById('competencias');
+            const contadorCaracteres = document.getElementById('contadorCaracteres');
+            
+            textareaCompetencias.addEventListener('input', function() {
+                contadorCaracteres.textContent = this.value.length;
+                
+                // Limitar a 500 caracteres
+                if (this.value.length > 500) {
+                    this.value = this.value.substring(0, 500);
+                    contadorCaracteres.textContent = 500;
+                }
+            });
+
+            
+            // Botão Cancelar
+            document.getElementById('btnCancelar').addEventListener('click', function() {
+                if (confirm('Deseja cancelar o cadastro? Os dados preenchidos serão perdidos.')) {
+                    window.history.back();
+                }
+            });
+
+            // Validação em tempo real do campo nome
+            document.getElementById('nomeOperador').addEventListener('blur', function() {
+                if (this.value.trim().length < 3) {
+                    this.classList.add('border-red-500');
+                } else {
+                    this.classList.remove('border-red-500');
+                }
+            });
+
+            // Validação em tempo real do campo competências
+            document.getElementById('competencias').addEventListener('blur', function() {
+                if (this.value.trim().length < 5) {
+                    this.classList.add('border-red-500');
+                } else {
+                    this.classList.remove('border-red-500');
+                }
+            });
+        });
+    </script>
+
+    
+<script src="./javascript/backEndHandle.mjs" type="module"></script>
+<script type="module" src="./javascript/firebase.mjs"></script>
+<script src="./javascript/main.js"></script>
+</body>
+</html>

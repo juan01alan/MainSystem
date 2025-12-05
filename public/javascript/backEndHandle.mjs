@@ -46,6 +46,51 @@ async function initializePage() {
   if (emAndamentoBt) {
     inicializeBtsStatus();
   }
+  //tela de cadastro operador
+  const competencias = document.getElementById('competencias');
+  if (competencias) {
+    const clickBt = document.getElementById('btnSalvar');
+    
+            // Botão Salvar
+            clickBt.addEventListener('click', function() {
+                const nomeOperador = document.getElementById('nomeOperador').value.trim();
+                const competencias = document.getElementById('competencias').value.trim();
+                
+                if (!nomeOperador) {
+                    alert('Por favor, preencha o nome do operador.');
+                    document.getElementById('nomeOperador').focus();
+                    return;
+                }
+                
+                if (!competencias) {
+                    alert('Por favor, preencha as competências do operador.');
+                    document.getElementById('competencias').focus();
+                    return;
+                }
+                
+                // Aqui você pode adicionar a lógica para salvar os dados
+                console.log('Dados do operador:');
+                console.log('Nome:', nomeOperador);
+                console.log('Data de cadastro:', document.getElementById('dataCadastro').value);
+                console.log('Competências:', competencias);
+                console.log('Status:', document.getElementById('statusOperador').value);
+                
+                // Simulação de salvamento bem-sucedido
+                criarOuAtualizarOperadorSimples(nomeOperador, {
+                    competencias: competencias,
+                    criadoEm: document.getElementById('dataCadastro').value,
+                    status: document.getElementById('statusOperador').value,
+                    projetos:{}
+                    
+                })
+                
+                // Limpar formulário (opcional)
+                document.getElementById('nomeOperador').value = '';
+                document.getElementById('competencias').value = '';
+                contadorCaracteres.textContent = '0';
+            });
+
+  }
   // Inicializa feedback se estiver na página de feedback
   if (isFeedbackPage) {
     console.log("📝 Inicializando sistema de feedback");
@@ -99,8 +144,88 @@ async function initializePage() {
   if (botaoSalvar) {
     await setupSaveButton(botaoSalvar);
   }
+}/**
+ * Cria ou atualiza operador com estrutura de projetos preparada
+ */
+async function criarOuAtualizarOperadorSimples (nomeOperador, dadosAdicionais = {}) {
+    try {
+        // Verifica se operador já existe
+        const operadorExistente = await buscarOperadorPorNome(nomeOperador);
+        
+        if (operadorExistente) {
+            console.log(`🔄 Operador existente encontrado: ${nomeOperador}`);
+            
+            //O ERRO AQUI É O SEGUINTE: NA TELA DE CADASTRO DO OPERADOR, ELE NÃO CRIA UM PROJETOS: [] PARA ARMAZENAR FUTUROS PROJETOS, FAZENDO UM BUG QUE SÓ EXISTE PRA OPERADORES CADASTRADOS NESSA TELA
+            // Atualiza informações do operador existente
+            const atualizacoes = {
+                atualizadoEm: new Date().toISOString(),
+                ultimoAcesso: new Date().toISOString(),
+                projetos: [],
+                ...dadosAdicionais
+            };
+            
+            // Remove id e nome dos dados de atualização para não sobrescrever
+            delete atualizacoes.id;
+            delete atualizacoes.nome;
+            
+            // Atualiza dados básicos do operador
+            await update(ref(database, `operadores/${operadorExistente.id}`), atualizacoes);
+            
+            // Verifica se o nó projetos já existe, se não, cria um objeto vazio
+            const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos`);
+            const projetosSnapshot = await get(projetosRef);
+            
+            if (!projetosSnapshot.exists()) {
+                await set(projetosRef, {});
+                console.log(`📁 Estrutura de projetos criada para operador ${nomeOperador}`);
+            }
+            
+            return {
+                success: true,
+                operadorId: operadorExistente.id,
+                operadorExistia: true,
+                operadorNome: nomeOperador,
+                mensagem: `Operador ${nomeOperador} atualizado`
+            };
+        } else {
+            // Cria novo operador
+            const operadorId = gerarIdUnicoPorNome(nomeOperador, 'op_');
+            
+            const operadorData = {
+                id: operadorId,
+                nome: nomeOperador,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString(),
+                primeiroAcesso: new Date().toISOString(),
+                ativo: true,
+                ...dadosAdicionais
+            };
+            
+            // Salva o operador
+            await set(ref(database, `operadores/${operadorId}`), operadorData);
+            
+            // Cria a estrutura de projetos vazia
+            await set(ref(database, `operadores/${operadorId}/projetos`), {});
+            
+            console.log(`➕ Novo operador criado: ${nomeOperador} (ID: ${operadorId}) com estrutura de projetos`);
+            
+            return {
+                success: true,
+                operadorId: operadorId,
+                operadorExistia: false,
+                operadorNome: nomeOperador,
+                mensagem: `Operador ${nomeOperador} criado com estrutura de projetos`
+            };
+        }
+    } catch (error) {
+        console.error(`❌ Erro ao processar operador ${nomeOperador}:`, error);
+        return {
+            success: false,
+            error: error.message,
+            operadorNome: nomeOperador
+        };
+    }
 }
-
 async function inicializeBtsStatus(){
     const chatAtual = retrieveLocal("chatAtual");
     const projeto = await getProjectByName(chatAtual);
@@ -876,6 +1001,8 @@ async function OperatorChatDOM() {
 /**
  * Configura o botão de salvar projeto
  */
+let ProjectCreate = false;
+
 async function setupSaveButton(botaoSalvar) {
     await IniciarDataList(); // Carrega clientes e operadores para autocomplete
     
@@ -891,11 +1018,20 @@ async function setupSaveButton(botaoSalvar) {
         console.log("🚀 Iniciando criação do projeto...");
         
         try {
+            if (ProjectCreate) {
+                return;
+            }
             // Tenta criar o projeto
             const result = await addProject(projectData, 0); // managerId 0 = sistema
             if (result.success) {
+
+                ProjectCreate = true;
                 alert(`✅ Projeto criado com sucesso!\nID: ${result.projectId}`);
                 // Limpa o formulário ou redireciona
+                setTimeout(() => {
+                    
+    window.location.href = `obrasGerais.html`;
+                }, 1000);
                 clearForm();
             } else {
                 alert(`❌ Erro ao criar projeto: ${result.message}`);
@@ -1280,6 +1416,7 @@ async function handleOperatorsObra() {
         if (!obrasContainer) {
             obrasContainer = document.createElement('div');
             obrasContainer.className = 'w-full flex flex-col items-center space-y-4';
+            obrasContainer.id = 'containerObrasOperator'
             minhasObrasScreenDOM.innerHTML = ''; // Limpa
             minhasObrasScreenDOM.appendChild(obrasContainer);
         }
@@ -1300,6 +1437,7 @@ async function handleOperatorsObra() {
             const button = document.createElement('button');
             button.className = 'obra-button';
             button.dataset.id = element.id;
+            button.id = element.obra;
             
             button.innerHTML = `
                 <span class="truncate text-left flex-1 pr-4">${element.obra}</span>
@@ -1397,6 +1535,7 @@ async function HANDLEOBRASDOM() {
     
     // Container para centralizar os cards de obra
     const obrasContainer = document.createElement('div');
+    obrasContainer.id = 'obrasContainer';
     obrasContainer.className = 'w-full max-w-2xl space-y-6';
     
     // Adiciona cada obra
@@ -1405,6 +1544,7 @@ async function HANDLEOBRASDOM() {
             const operadoresFormatados = formatarOperadores(element.operadores);
             
             const obraCard = document.createElement('div');
+            obraCard.id = element.obra;
             obraCard.className = 'flex flex-col items-center w-full';
             
             obraCard.innerHTML = `
