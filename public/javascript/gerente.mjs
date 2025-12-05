@@ -43,7 +43,7 @@ function addOperators() {
     const operatorsCards = document.getElementById("operatorsCards");
     let newName = shortenText(operatorNew, 9);
     operatorsCards.innerHTML += `<div id='${newName}' class='cardOperator flex items-center gap-2 rounded-full bg-primary/20 px-3 py-1.5'><span class='text-sm font-medium text-primary' >${newName}</span><button class='text-primary/70 hover:text-primary'><span class='material-symbols-outlined' style='font-size: 16px;'>close</span></button></div>`;
-    operatorsList.push(newName);
+    operatorsList.push(operatorNew);
     
     
 operatorsCards.addEventListener('click', function(event) {

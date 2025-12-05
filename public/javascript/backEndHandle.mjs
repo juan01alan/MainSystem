@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initializePage();
 });
 
+//SEM BUGS CRITICOS
+//Nao da pra incluir projetos novos para operadores cadastrados na tela de cadastro de operadores
 /**
  * Inicializa a página com base nos elementos presentes
  */
@@ -76,7 +78,21 @@ async function initializePage() {
                 console.log('Status:', document.getElementById('statusOperador').value);
                 
                 // Simulação de salvamento bem-sucedido
-                criarOuAtualizarOperadorSimples(nomeOperador, {
+                criarOuAtualizarOperadorCOMDATA(nomeOperador,0, {
+        cliente: "InitialOrder",
+        obra: "InitialOrder",
+        localizacao: "InitialOrder",
+        descricao: "InitialOrder",
+        email: "InitialOrder",
+        whatsappCliente: "InitialOrder",
+        Criado:"InitialOrder",
+        cpfCnpjCliente: "InitialOrder",
+        operadores: [],
+        dataInicial: "InitialOrder",
+        dataFinal: "InitialOrder",
+        managerId: 0,
+        status: 1}, {
+                    nome:  nomeOperador,
                     competencias: competencias,
                     criadoEm: document.getElementById('dataCadastro').value,
                     status: document.getElementById('statusOperador').value,
@@ -144,88 +160,8 @@ async function initializePage() {
   if (botaoSalvar) {
     await setupSaveButton(botaoSalvar);
   }
-}/**
- * Cria ou atualiza operador com estrutura de projetos preparada
- */
-async function criarOuAtualizarOperadorSimples (nomeOperador, dadosAdicionais = {}) {
-    try {
-        // Verifica se operador já existe
-        const operadorExistente = await buscarOperadorPorNome(nomeOperador);
-        
-        if (operadorExistente) {
-            console.log(`🔄 Operador existente encontrado: ${nomeOperador}`);
-            
-            //O ERRO AQUI É O SEGUINTE: NA TELA DE CADASTRO DO OPERADOR, ELE NÃO CRIA UM PROJETOS: [] PARA ARMAZENAR FUTUROS PROJETOS, FAZENDO UM BUG QUE SÓ EXISTE PRA OPERADORES CADASTRADOS NESSA TELA
-            // Atualiza informações do operador existente
-            const atualizacoes = {
-                atualizadoEm: new Date().toISOString(),
-                ultimoAcesso: new Date().toISOString(),
-                projetos: [],
-                ...dadosAdicionais
-            };
-            
-            // Remove id e nome dos dados de atualização para não sobrescrever
-            delete atualizacoes.id;
-            delete atualizacoes.nome;
-            
-            // Atualiza dados básicos do operador
-            await update(ref(database, `operadores/${operadorExistente.id}`), atualizacoes);
-            
-            // Verifica se o nó projetos já existe, se não, cria um objeto vazio
-            const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos`);
-            const projetosSnapshot = await get(projetosRef);
-            
-            if (!projetosSnapshot.exists()) {
-                await set(projetosRef, {});
-                console.log(`📁 Estrutura de projetos criada para operador ${nomeOperador}`);
-            }
-            
-            return {
-                success: true,
-                operadorId: operadorExistente.id,
-                operadorExistia: true,
-                operadorNome: nomeOperador,
-                mensagem: `Operador ${nomeOperador} atualizado`
-            };
-        } else {
-            // Cria novo operador
-            const operadorId = gerarIdUnicoPorNome(nomeOperador, 'op_');
-            
-            const operadorData = {
-                id: operadorId,
-                nome: nomeOperador,
-                criadoEm: new Date().toISOString(),
-                atualizadoEm: new Date().toISOString(),
-                primeiroAcesso: new Date().toISOString(),
-                ativo: true,
-                ...dadosAdicionais
-            };
-            
-            // Salva o operador
-            await set(ref(database, `operadores/${operadorId}`), operadorData);
-            
-            // Cria a estrutura de projetos vazia
-            await set(ref(database, `operadores/${operadorId}/projetos`), {});
-            
-            console.log(`➕ Novo operador criado: ${nomeOperador} (ID: ${operadorId}) com estrutura de projetos`);
-            
-            return {
-                success: true,
-                operadorId: operadorId,
-                operadorExistia: false,
-                operadorNome: nomeOperador,
-                mensagem: `Operador ${nomeOperador} criado com estrutura de projetos`
-            };
-        }
-    } catch (error) {
-        console.error(`❌ Erro ao processar operador ${nomeOperador}:`, error);
-        return {
-            success: false,
-            error: error.message,
-            operadorNome: nomeOperador
-        };
-    }
 }
+
 async function inicializeBtsStatus(){
     const chatAtual = retrieveLocal("chatAtual");
     const projeto = await getProjectByName(chatAtual);
@@ -1387,9 +1323,10 @@ async function getOperatorProjects(operatorId) {
         
         // Converte objeto para array de projetos
         const projetos = Object.values(snapshot.val());
+        
         console.log(`✅ ${projetos.length} projetos encontrados`);
         
-        return projetos.filter(projeto => projeto && projeto.obra); // Filtra projetos válidos
+        return projetos.filter(projeto => projeto && projeto.obra && projeto.obra !== "InitialOrder"); // Filtra projetos válidos
     } catch (error) {
         console.error(`❌ Erro ao buscar projetos:`, error);
         return [];
@@ -1766,7 +1703,7 @@ async function getAllProjects() {
                 const project = childSnapshot.val();
                 
                 // Verifica se tem uma obra válida
-                if (project.obra && project.obra.trim()) {
+                if (project.obra && projeto.obra !== "InitialOrder" && project.obra.trim()) {
                     projects.push({
                         key: childSnapshot.key,
                         ...project
@@ -1965,6 +1902,82 @@ async function criarOuAtualizarOperador(nomeOperador, projetoId, projetoData) {
 }
 
 /**
+ * Cria ou atualiza operador evitando duplicatas COM DATA
+ */
+async function criarOuAtualizarOperadorCOMDATA(nomeOperador, projetoId, projetoData, operadorDataBase) {
+    try {
+        // Verifica se operador já existe
+        const operadorExistente = await buscarOperadorPorNome(nomeOperador);
+        
+        if (operadorExistente) {
+            console.log(`🔄 Operador existente: ${nomeOperador}`);
+            
+            // Verifica se o projeto já está associado ao operador
+            const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos/${projetoId}`);
+            const projetoSnapshot = await get(projetosRef);
+            
+            if (!projetoSnapshot.exists()) {
+                // Adiciona o projeto ao operador existente
+                await set(projetosRef, {
+                    id: projetoId,
+                    obra: projetoData.obra,
+                    dataAssociacao: new Date().toISOString(),
+                    ...projetoData
+                });
+                console.log(`✅ Projeto adicionado ao operador existente`);
+            } else {
+                console.log(`ℹ️ Projeto já existe no operador`);
+            }
+            
+            return {
+                success: true,
+                operadorId: operadorExistente.id,
+                operadorExistia: true,
+                operadorNome: nomeOperador
+            };
+        } else {
+            // Cria novo operador
+            const operadorId = gerarIdUnicoPorNome(nomeOperador, 'op_');
+            
+            const operadorData = {
+                id: operadorId,
+                nome: nomeOperador,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString(),
+                ativo: true,
+                ...operadorDataBase
+            };
+            
+            // Salva o operador
+            await set(ref(database, `operadores/${operadorId}`), operadorData);
+            
+            // Adiciona o projeto ao novo operador
+            await set(ref(database, `operadores/${operadorId}/projetos/${projetoId}`), {
+                id: projetoId,
+                obra: projetoData.obra,
+                dataAssociacao: new Date().toISOString(),
+                ...projetoData
+            });
+            
+            console.log(`➕ Novo operador criado: ${nomeOperador} (ID: ${operadorId})`);
+            
+            return {
+                success: true,
+                operadorId: operadorId,
+                operadorExistia: false,
+                operadorNome: nomeOperador
+            };
+        }
+    } catch (error) {
+        console.error(`❌ Erro ao processar operador ${nomeOperador}:`, error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
+/**
  * Cria ou atualiza cliente evitando duplicatas
  */
 async function criarOuAtualizarCliente(nomeCliente, projetoId, projetoData) {
@@ -2093,6 +2106,9 @@ async function buscarProjetoPorNome(nomeObra) {
             console.log(`    Nome no banco: "${projeto.obra}"`);
             console.log(`    Comparando com: "${nomeObra}"`);
             
+            if (projeto.obra = "InitialOrder") {
+                return;
+            }
             // Verifica se a propriedade obra existe e faz a comparação
             if (projeto.obra && projeto.obra.trim().toLowerCase() === nomeObra.trim().toLowerCase()) {
                 console.log(`✅ Projeto encontrado! ID: ${projetoId}`);
@@ -2201,6 +2217,7 @@ async function addProject(projectData, managerId) {
             for (let i = 0; i < nomesOperadoresReais.length; i++) {
                 const nomeOperadorReal = nomesOperadoresReais[i];
                 if (!nomeOperadorReal) continue;
+                console.log('operador atual: ', nomeOperadorReal);
                 
                 // Verifica se operador já está associado
                 if (!operadoresNomes.includes(nomeOperadorReal)) {
