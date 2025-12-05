@@ -77,7 +77,20 @@
       </span>
     </button>
 </header>
+<!-- searchbar -->
+<div class="py-3">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-zinc-500 dark:text-zinc-400 flex border border-zinc-300 dark:border-zinc-700 bg-background-light dark:bg-zinc-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
+<button id="inputObraSearch">
 
+  <span class="material-symbols-outlined">search</span>
+</button>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-zinc-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-zinc-300 dark:border-zinc-700 bg-background-light dark:bg-zinc-800 focus:border-primary/50 h-full placeholder:text-zinc-500 dark:placeholder:text-zinc-400 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" id="inputObraSearch" placeholder="Buscar obra por nome" value=""/>
+</div>
+</label>
+</div>
 <main class="content-center w-full px-4 py-6" id="minhasObrasScreen">
   <!-- Container para centralizar o conteúdo -->
   <div class="w-full flex flex-col items-center space-y-4">
@@ -128,6 +141,92 @@ function refreshPage(forceGet = false) {
         // Recarrega da cache (padrão)
         window.location.reload();
     }
+}
+</script>
+
+<script>
+const searchObraOperador = document.getElementById("searchObraOperador");
+const inputObraSearch = document.getElementById("inputObraSearch");
+if (searchObraOperador != null) {
+    searchObraOperador.addEventListener('click', ()=>{
+
+    filtrarComDebounce(inputObraSearch.value);
+    });
+}
+if (inputObraSearch != null) {
+const filtrarComDebounce = criarFiltroComDebounce();
+inputObraSearch.addEventListener('input', function(e) {
+    filtrarComDebounce(e.target.value);
+});
+}
+  /**
+ * Filtra as divs da lista de operadores com base no texto do input
+ * @param {string} inputValue - Valor do input de busca
+ */
+function filtrarOperadores(inputValue) {
+    // Seleciona o container e todas as divs filhas
+    const operatorList = document.getElementById('minhasObrasScreen');
+    const divs = operatorList.querySelectorAll(':scope > div'); // Apenas divs filhas diretas
+    
+    // Converte o valor do input para minúsculas e remove espaços
+    const searchText = inputValue.toLowerCase().trim();
+    
+    divs.forEach(div => {
+        // Pega o ID da div (ou qualquer atributo que identifique)
+        const divId = div.id.toLowerCase();
+        
+        // Verifica se o ID contém todos os caracteres do texto de busca
+        const contemTodosCaracteres = searchText === '' || 
+            Array.from(searchText).every(char => divId.includes(char));
+        
+        if (!contemTodosCaracteres) {
+            div.classList.add('disabled');
+            div.classList.add('hidden');
+            div.classList.add('pointer-events-none');
+        } else {
+            div.classList.remove('disabled');
+            div.classList.remove('hidden');
+            div.classList.remove('pointer-events-none');
+        }
+    });
+}
+
+/**
+ * Versão alternativa que usa texto visível da div em vez do ID
+ * @param {string} inputValue - Valor do input de busca
+ */
+function filtrarOperadoresPorTexto(inputValue) {
+    const operatorList = document.getElementById('operatorList');
+    const divs = operatorList.querySelectorAll(':scope > div');
+    const searchText = inputValue.toLowerCase().trim();
+    
+    divs.forEach(div => {
+        // Pega o texto visível da div (incluindo filhos)
+        const divText = div.textContent.toLowerCase();
+        
+        const contemTodosCaracteres = searchText === '' || 
+            Array.from(searchText).every(char => divText.includes(char));
+        
+        if (!contemTodosCaracteres) {
+            div.classList.add('disabled');
+        } else {
+            div.classList.remove('disabled');
+        }
+    });
+}
+
+/**
+ * Versão com debounce para melhor performance em inputs em tempo real
+ */
+function criarFiltroComDebounce() {
+    let timeoutId;
+    
+    return function(inputValue) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            filtrarOperadores(inputValue);
+        }, 300); // Aguarda 300ms após parar de digitar
+    };
 }
 </script>
 <script src="./javascript/backEndHandle.mjs" type="module"></script>

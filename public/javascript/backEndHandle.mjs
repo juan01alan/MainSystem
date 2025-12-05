@@ -1408,7 +1408,7 @@ async function HANDLEOBRASDOM() {
             obraCard.className = 'flex flex-col items-center w-full';
             
             obraCard.innerHTML = `
-                <div class="w-full max-w-md flex flex-col gap-3">
+                <div id="${element.id}"  class="w-full max-w-md flex flex-col gap-3">
                     <button data-status="${element.status}" data-nome="${element.obra}" data-id="${element.id}" 
                             class="obra-item w-full cursor-pointer flex items-center justify-between overflow-hidden rounded-xl h-20 px-6 bg-primary text-white gap-4 text-lg font-bold leading-normal tracking-[0.015em] active:opacity-80 transition-all duration-200 hover:bg-primary/90 hover:shadow-lg">
                         <span class="truncate text-left flex-1">${element.obra}</span>
@@ -2169,7 +2169,7 @@ async function MAKEOPERATORSDOM(OperadoresDiv) {
     Operadorespresentes.forEach(element => {
         if (element.nome) {
             OperadoresDiv.innerHTML += `
-                <div data-id="${element.id}" class="operatorInList flex cursor-pointer items-center gap-4 rounded-lg bg-black p-3 min-h-[72px] justify-between transition-all hover:bg-neutral-900 active:bg-neutral-800 mb-2">
+                <div id="${element.id}" data-id="${element.id}" class="operatorInList flex cursor-pointer items-center gap-4 rounded-lg bg-black p-3 min-h-[72px] justify-between transition-all hover:bg-neutral-900 active:bg-neutral-800 mb-2">
                     <div class="flex items-center gap-4">
                         <div class="flex flex-col justify-center">
                             <p class="text-white text-base font-medium leading-normal line-clamp-1">
