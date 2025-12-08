@@ -36,6 +36,10 @@ async function initializePage() {
   const isMinhasObrasPage = document.getElementById("minhasObrasScreen");
   const isFeedbackPage = document.getElementById("submitFeedback");
   const emAndamentoBt = document.getElementById("emAndamentoBt");
+  const operatorDataList = document.getElementById("operatorDataList");
+  if (operatorDataList) {
+    operatorDataListDOM();
+  }
   const concluidoBt = document.getElementById("concluidoBt");
   console.log("🔍 Detecção de páginas:", {
     isOperatorChatPage,
@@ -160,6 +164,44 @@ async function initializePage() {
   }
 }
 
+let operatorsNAMEArray = [];
+async function operatorDataListDOM(){
+    const operatorNameDOM = document.getElementById("nomeOperador");
+    const operatorDataListDOM = document.getElementById("operatorDataList");
+    // Carrega operadores
+    const operatorsCur = await buscarTodosOperadores();
+    if (operatorsCur.length > 0) {
+        operatorsCur.forEach(element => {
+            if (element.nome) {
+                operatorsNAMEArray.push(element.nome);
+                operatorDataListDOM.innerHTML += `<option value="${element.nome}">`;
+            }
+        });
+    }
+    operatorNameDOM.addEventListener('input',async (event)=>{
+        if (event.target.value) {
+            if (operatorsNAMEArray.includes(event.target.value)) {
+                console.log(event.target.value);
+                
+            const salvarOperadotbtnTxt = document.getElementById("btnSalvar");
+            salvarOperadotbtnTxt.innerHTML = "Atualizar Operador";
+            const operatorValuebyName = await getOperatorByName(event.target.value);
+            const operadorRef =await ref(database, `operadores/${operatorValuebyName.id}`);
+            const snapshot = await get(operadorRef);
+            const valores = snapshot.val();
+            console.log(operadorRef);
+            if (operadorRef) {
+                // Limpar formulário (opcional)
+                document.getElementById('nomeOperador').value = valores.nome;
+                document.getElementById('competencias').value = valores.competencias === undefined ? "não atribuidas " : valores.competencias;
+                contadorCaracteres.textContent = '0';
+                
+            }
+            }
+        }
+    });
+    
+}
 async function inicializeBtsStatus(){
     const chatAtual = retrieveLocal("chatAtual");
     const projeto = await getProjectByName(chatAtual);
@@ -1942,6 +1984,11 @@ async function atualizarOperador(nome, novosDados) {
         const operadoresRef = ref(database, `operadores/${q.id}`);
         const Shot = await get(operadoresRef);
         const values = Shot.val();
+        const projetos = values.projetos;
+        const dados = {
+            ...novosDados,
+            projetos: projetos,
+        }
 
         if (!values) {
             alert('Operador não encontrado');
@@ -1949,7 +1996,7 @@ async function atualizarOperador(nome, novosDados) {
         }
 
         if (values) {
-            await update(operadoresRef, novosDados);
+            await update(operadoresRef, dados);
             alert('Operador atualizado com sucesso!');
             return true;
         } else {
@@ -1982,7 +2029,7 @@ async function criarOuAtualizarOperadorCOMDATA(nomeOperador, projetoId, projetoD
             if (operadorRef) {
                 // Limpar formulário (opcional)
                 document.getElementById('nomeOperador').value = valores.nome;
-                document.getElementById('competencias').value = valores.competencias;
+                document.getElementById('competencias').value = valores.competencias === undefined ? "não atribuidas " : valores.competencias;
                 contadorCaracteres.textContent = '0';
                 
             }
