@@ -76,7 +76,7 @@
                         <label class="flex flex-col w-full">
                             <p class="text-text-primary dark:text-secondary text-base font-medium leading-normal pb-2">COMPETÊNCIAS *</p>
                             <div class="relative">
-                                <textarea id="competencias" class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark min-h-32 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal" placeholder="Descreva as competências do operador (separadas por vírgula ou linha)" required></textarea>
+                                <textarea id="competencias" class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden rounded-lg text-text-primary dark:text-background-light focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-input-border-light dark:border-input-border-dark bg-input-bg-light dark:bg-input-bg-dark min-h-32 placeholder:text-text-secondary/70 p-[15px] text-base font-normal leading-normal" placeholder="Descreva as competências do operador (separadas por vírgula)" required></textarea>
                                 <div class="absolute bottom-3 right-3 text-xs text-text-secondary/70">
                                     <span id="contadorCaracteres">0</span>/500
                                 </div>
@@ -140,6 +140,14 @@
             const textareaCompetencias = document.getElementById('competencias');
             const contadorCaracteres = document.getElementById('contadorCaracteres');
             
+            textareaCompetencias.addEventListener('keydown',(event)=>{
+                if (event.key === 'Enter') {
+    // Prevent the default form submission behavior (if applicable)
+    event.preventDefault(); 
+    textareaCompetencias.value += ',';
+  }
+            })
+
             textareaCompetencias.addEventListener('input', function() {
                 contadorCaracteres.textContent = this.value.length;
                 

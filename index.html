@@ -1,18 +1,500 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INDEX</title><!-- Minified version -->
-<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <title>WeDo Administração</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        /* Animações personalizadas */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .btn-hover:active {
+            transform: translateY(0);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #4B341C 0%, #856d4b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4B341C",
+                        "secondary": "#DEB887",
+                        "text-primary": "#3D2B1F",
+                        "text-secondary": "#856d4b",
+                        "background": "#ffff",
+                        "input-border": "#E0D6C3",
+                        "input-bg": "#FFFFFF",
+                        // Cores adicionais baseadas na paleta
+                        "wood-light": "#E0D6C3",
+                        "wood-medium": "#A08B6C",
+                        "wood-dark": "#3D2B1F",
+                        "accent": "#8B7355",
+                        "accent-light": "#F5E8D9",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                },
+            }
+        }
+    </script>
 </head>
-<body>
-    
-    <a href="public\gerente.html">TELA DE CADASTRO DE PROJETOS</a>
-    <a href="public\CadastrarOperador.html">TELA DE CADASTRO DE OPERADORES</a>
-    <a href="public\listaoperator.html">TELA DE OPERADORES</a>
-    
+<body class="font-display bg-background text-text-primary min-h-screen">
+    <!-- Container principal -->
+    <div class="min-h-screen flex flex-col">
+        
+        <!-- Cabeçalho -->
+        <header class="glass-effect sticky top-0 z-50 shadow-sm border-b border-input-border">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <!-- Logo e Título -->
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gradient-to-br from-primary to-wood-medium w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-tools text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold">
+                                <span class="text-gradient">WeDo</span> <span class="text-wood-dark">Administração</span>
+                            </h1>
+                            <p class="text-sm text-text-secondary">Sistema de gestão de obras e operadores</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Relógio e Status -->
+                    <div class="flex items-center gap-4">
+                        <!-- Relógio -->
+                        <div class="bg-white rounded-xl p-3 shadow-sm border border-input-border">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-clock text-primary"></i>
+                                <div class="text-center">
+                                    <div id="current-time" class="text-xl md:text-2xl font-bold">00:00:00</div>
+                                    <div id="current-date" class="text-xs text-text-secondary">Carregando...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Status do Sistema -->
+                        <div class="hidden md:flex items-center gap-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg">
+                            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span class="text-sm font-medium">Sistema Online</span>
+                        </div>
+                        
+                        <!-- Menu Mobile -->
+                        <button id="mobile-menu-btn" class="md:hidden bg-wood-light p-2 rounded-lg hover:bg-secondary transition">
+                            <i class="fas fa-bars text-text-primary"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 container mx-auto px-4 py-8">
+            <!-- Cards de Status -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in">
+                <!-- Card Projetos -->
+                <div class="bg-input-bg rounded-2xl p-6 shadow-sm border border-input-border btn-hover">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">Projetos</h3>
+                            <p class="text-3xl font-bold text-primary mt-2" id="project-count">0</p>
+                        </div>
+                        <div class="bg-accent-light p-3 rounded-xl">
+                            <i class="fas fa-folder-open text-primary text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-text-secondary" id="project-info">Carregando dados...</p>
+                </div>
+                
+                <!-- Card Operadores -->
+                <div class="bg-input-bg rounded-2xl p-6 shadow-sm border border-input-border btn-hover">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">Operadores</h3>
+                            <p class="text-3xl font-bold text-accent mt-2" id="operator-count">0</p>
+                        </div>
+                        <div class="bg-secondary/20 p-3 rounded-xl">
+                            <i class="fas fa-users text-accent text-xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-text-secondary" id="operator-info">Carregando dados...</p>
+                </div>
+            </div>
+            
+            <!-- Título das Funcionalidades -->
+            <div class="mb-6 fade-in" style="animation-delay: 0.2s;">
+                <h2 class="text-2xl font-bold text-wood-dark mb-2">Painel de Controle</h2>
+                <p class="text-text-secondary">Acesse rapidamente as principais funcionalidades do sistema</p>
+            </div>
+            
+            <!-- Grid de Funcionalidades -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 fade-in" style="animation-delay: 0.3s;">
+                
+                <!-- Cadastro de Projetos -->
+                <a href="public/gerente.html" class="group">
+                    <div class="bg-gradient-to-br from-primary to-wood-dark text-white rounded-2xl p-6 shadow-lg h-full flex flex-col btn-hover hover:from-wood-dark hover:to-primary transition-all duration-300">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="bg-white/20 p-3 rounded-xl">
+                                <i class="fas fa-project-diagram text-xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Cadastro de Projetos</h3>
+                        <p class="text-accent-light/90 mb-4">Crie e gerencie novos projetos e obras</p>
+                        <div class="mt-auto pt-4 border-t border-white/20">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                <span>Criar novo projeto</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Cadastro de Operadores -->
+                <a href="public/CadastrarOperador.html" class="group">
+                    <div class="bg-gradient-to-br from-wood-medium to-accent text-white rounded-2xl p-6 shadow-lg h-full flex flex-col btn-hover hover:from-accent hover:to-wood-medium transition-all duration-300">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="bg-white/20 p-3 rounded-xl">
+                                <i class="fas fa-user-plus text-xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Cadastro de Operadores</h3>
+                        <p class="text-accent-light/90 mb-4">Adicione e gerencie operadores do sistema</p>
+                        <div class="mt-auto pt-4 border-t border-white/20">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-id-card mr-2"></i>
+                                <span>Registrar novo operador</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Lista de Operadores -->
+                <a href="public/listaoperator.html" class="group">
+                    <div class="bg-gradient-to-br from-secondary to-wood-medium text-text-primary rounded-2xl p-6 shadow-lg h-full flex flex-col btn-hover hover:from-wood-medium hover:to-secondary transition-all duration-300">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="bg-white/20 p-3 rounded-xl">
+                                <i class="fas fa-users-cog text-xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Lista de Operadores</h3>
+                        <p class="text-text-primary/90 mb-4">Visualize e edite operadores cadastrados</p>
+                        <div class="mt-auto pt-4 border-t border-white/20">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-list mr-2"></i>
+                                <span>Ver todos os operadores</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                
+                <!-- Obras Atuais -->
+                <a href="public/obrasGerais.html" class="group">
+                    <div class="bg-gradient-to-br from-accent-light to-secondary text-text-primary rounded-2xl p-6 shadow-lg h-full flex flex-col btn-hover hover:from-secondary hover:to-accent-light transition-all duration-300">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="bg-white/20 p-3 rounded-xl">
+                                <i class="fas fa-building text-xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-right opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Obras Atuais</h3>
+                        <p class="text-text-primary/90 mb-4">Acompanhe o progresso das obras</p>
+                        <div class="mt-auto pt-4 border-t border-white/20">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-chart-line mr-2"></i>
+                                <span>Monitorar andamento</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Atalhos Rápidos (Mobile) -->
+            <div class="md:hidden mt-8 bg-input-bg rounded-2xl p-6 shadow-sm border border-input-border fade-in" style="animation-delay: 0.4s;">
+                <h3 class="text-lg font-bold text-wood-dark mb-4">Atalhos Rápidos</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="public/gerente.html" class="bg-accent-light text-primary py-3 px-4 rounded-lg flex items-center justify-center gap-2 btn-hover hover:bg-secondary/20 transition">
+                        <i class="fas fa-plus"></i>
+                        <span>Novo Projeto</span>
+                    </a>
+                    <a href="public/CadastrarOperador.html" class="bg-secondary/20 text-accent py-3 px-4 rounded-lg flex items-center justify-center gap-2 btn-hover hover:bg-secondary/30 transition">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Novo Operador</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Rodapé do Conteúdo -->
+            <div class="mt-12 pt-8 border-t border-input-border text-center text-text-secondary text-sm fade-in" style="animation-delay: 0.5s;">
+                <p>Sistema WeDo Administração v1.0 • © 2023 Todos os direitos reservados</p>
+                <p class="mt-1">Desenvolvido para otimizar a gestão de obras e operadores</p>
+            </div>
+        </main>
+    </div>
 
-    <a href="public\obrasGerais.html">TELA DE OBRAS ATUAIS</a>
-    <script src="./public/javascript/firebase.mjs" type="module"> </script>
+    <!-- Menu Mobile (Off-canvas) -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="absolute right-0 top-0 h-full w-64 bg-input-bg shadow-xl transform transition-transform duration-300">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-xl font-bold text-wood-dark">Menu</h3>
+                    <button id="close-mobile-menu" class="text-text-secondary hover:text-primary">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <a href="public/gerente.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-light text-text-primary hover:text-primary transition">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Cadastro de Projetos</span>
+                    </a>
+                    
+                    <a href="public/CadastrarOperador.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/20 text-text-primary hover:text-accent transition">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Cadastro de Operadores</span>
+                    </a>
+                    
+                    <a href="public/listaoperator.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/10 text-text-primary hover:text-wood-medium transition">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Lista de Operadores</span>
+                    </a>
+                    
+                    <a href="public/obrasGerais.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-accent-light/50 text-text-primary hover:text-wood-dark transition">
+                        <i class="fas fa-building"></i>
+                        <span>Obras Atuais</span>
+                    </a>
+                    
+                    <div class="pt-4 border-t border-input-border">
+                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-wood-light text-text-primary transition">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Perfil do Usuário</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-wood-light text-text-primary transition">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair do Sistema</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBaA1GvG0O9kxtvM_jRkMwGTkkqDUK4cb8",
+            authDomain: "linen-works-420623.firebaseapp.com",
+            databaseURL: "https://linen-works-420623-default-rtdb.firebaseio.com",
+            projectId: "linen-works-420623",
+            storageBucket: "linen-works-420623.firebasestorage.app",
+            messagingSenderId: "1024746152058",
+            appId: "1:1024746152058:web:7783459f7a045de5f01bc3"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Função para contar projetos (subtrai 1)
+        async function contarProjetos() {
+            try {
+                const projetosRef = database.ref('projetos');
+                const snapshot = await projetosRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const projetos = snapshot.val();
+                    const quantidade = Object.keys(projetos).length;
+                    
+                    // Subtrai 1 como solicitado
+                    const total = Math.max(0, quantidade - 1);
+                    
+                    document.getElementById('project-count').textContent = total;
+                    document.getElementById('project-info').textContent = `Total de projetos no sistema`;
+                    
+                    return total;
+                } else {
+                    document.getElementById('project-count').textContent = '0';
+                    document.getElementById('project-info').textContent = 'Nenhum projeto cadastrado';
+                    return 0;
+                }
+            } catch (error) {
+                console.error('Erro ao contar projetos:', error);
+                document.getElementById('project-count').textContent = '0';
+                document.getElementById('project-info').textContent = 'Erro ao carregar dados';
+                return 0;
+            }
+        }
+
+        // Função para contar operadores (sem subtrair 1)
+        async function contarOperadores() {
+            try {
+                const operadoresRef = database.ref('operadores');
+                const snapshot = await operadoresRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const operadores = snapshot.val();
+                    const quantidade = Object.keys(operadores).length;
+                    
+                    document.getElementById('operator-count').textContent = quantidade;
+                    document.getElementById('operator-info').textContent = `Total de operadores cadastrados`;
+                    
+                    return quantidade;
+                } else {
+                    document.getElementById('operator-count').textContent = '0';
+                    document.getElementById('operator-info').textContent = 'Nenhum operador cadastrado';
+                    return 0;
+                }
+            } catch (error) {
+                console.error('Erro ao contar operadores:', error);
+                document.getElementById('operator-count').textContent = '0';
+                document.getElementById('operator-info').textContent = 'Erro ao carregar dados';
+                return 0;
+            }
+        }
+
+        // Atualizar horário em tempo real
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Formatar hora
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            // Formatar data
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('pt-BR', options);
+            
+            // Atualizar elementos HTML
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('current-date').textContent = dateStr;
+        }
+        
+        // Menu mobile
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#mobile-menu > div').style.transform = 'translateX(0)';
+            }, 10);
+        });
+        
+        document.getElementById('close-mobile-menu').addEventListener('click', function() {
+            document.querySelector('#mobile-menu > div').style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                document.getElementById('mobile-menu').classList.add('hidden');
+            }, 300);
+        });
+        
+        // Fechar menu ao clicar fora
+        document.getElementById('mobile-menu').addEventListener('click', function(e) {
+            if (e.target.id === 'mobile-menu') {
+                document.querySelector('#mobile-menu > div').style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                }, 300);
+            }
+        });
+        
+        // Animações de entrada
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Inicializar relógio
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            // Carregar dados do Firebase
+            await contarProjetos();
+            await contarOperadores();
+            
+            // Configurar atualização automática a cada 30 segundos
+            setInterval(async () => {
+                await contarProjetos();
+                await contarOperadores();
+            }, 30000);
+            
+            // Animar elementos com delay
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.style.animationDelay = `${index * 0.1}s`;
+                    el.classList.add('fade-in');
+                }, 100);
+            });
+            
+            // Adicionar efeito de clique nos cards
+            const cards = document.querySelectorAll('.btn-hover');
+            cards.forEach(card => {
+                card.addEventListener('mousedown', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                card.addEventListener('mouseup', function() {
+                    this.style.transform = '';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                });
+            });
+            
+            console.log('Sistema WeDo Administração inicializado com sucesso!');
+        });
+
+        // Expor funções para possível uso externo
+        window.contarProjetos = contarProjetos;
+        window.contarOperadores = contarOperadores;
+    </script>
 </body>
 </html>

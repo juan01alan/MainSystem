@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
  * Inicializa a página com base nos elementos presentes
  */
 async function initializePage() {
+    verificarECriarProjeto0();
   console.log("🚀 Inicializando página...");
   console.log("📄 Página atual:", window.location.pathname);
   
@@ -56,8 +57,9 @@ async function initializePage() {
             // Botão Salvar
             clickBt.addEventListener('click', function() {
                 const nomeOperador = document.getElementById('nomeOperador').value.trim();
-                const competencias = document.getElementById('competencias').value.trim();
-                
+                let competencias = document.getElementById('competencias').value;
+                competencias.slice(",");
+                console.log(competencias, 'COMPETENCIAS ');
                 if (!nomeOperador) {
                     alert('Por favor, preencha o nome do operador.');
                     document.getElementById('nomeOperador').focus();
@@ -100,10 +102,6 @@ async function initializePage() {
                     
                 })
                 
-                // Limpar formulário (opcional)
-                document.getElementById('nomeOperador').value = '';
-                document.getElementById('competencias').value = '';
-                contadorCaracteres.textContent = '0';
             });
 
   }
@@ -1059,6 +1057,43 @@ async function setUpMsgsGerente() {
 /**
  * Configura botão de enviar mensagem
  */async function setupMessageButton(button) {
+    
+      const operatorMsgEL = document.getElementById("msgTxt");
+      operatorMsgEL.addEventListener("keydown", async (event) => {
+        if (event.key == 'Enter') {
+            event.preventDefault();
+             try {
+      const Id = retrieveLocal("IdProjetoAtual");
+      const OperadorId = retrieveLocal("OperadorSelecionado");
+      const OperadorNome = retrieveLocal("OperadorNome");
+      const operatorMsg = document.getElementById("msgTxt").value;
+      
+      
+      
+      // Envia mensagem
+      await enviarMensagem(Id, OperadorId, OperadorNome, operatorMsg);
+      
+      // Atualiza mensagens
+      const OperadorAtual = await retrieveLocal("OperadorNome");
+      const mensagens = await buscarMensagensChat(Id);
+      
+      // Verifica se estamos na página correta antes de exibir
+      const chatContainer = document.getElementById("messages");
+      if (chatContainer) {
+        exibirMensagens(mensagens, OperadorAtual);
+      }
+      
+      // Limpa campo de mensagem
+      const msgInput = document.getElementById("msgTxt");
+      if (msgInput) {
+        msgInput.value = '';
+      }
+      
+    } catch (error) {
+      console.error("❌ Erro ao enviar mensagem:", error);
+    }
+        }
+      })
   button.addEventListener("click", async () => {
     try {
       const Id = retrieveLocal("IdProjetoAtual");
@@ -1683,11 +1718,6 @@ async function buscarMensagensChat(projetoId) {
         throw error;
     }
 }
-
-// ============================================================
-// FUNÇÕES DE BUSCA E LISTAGEM
-// ============================================================
-
 /**
  * Busca todos os projetos válidos
  */
@@ -1702,8 +1732,9 @@ async function getAllProjects() {
             snapshot.forEach((childSnapshot) => {
                 const project = childSnapshot.val();
                 
-                // Verifica se tem uma obra válida
-                if (project.obra && projeto.obra !== "InitialOrder" && project.obra.trim()) {
+                // CORREÇÃO: substituir "projeto.obra" por "project.obra"
+                // Verifica se tem uma obra válida e não é "InitialOrder"
+                if (project.obra && project.obra !== "InitialOrder" && project.obra.trim()) {
                     projects.push({
                         key: childSnapshot.key,
                         ...project
@@ -1826,8 +1857,9 @@ async function buscarClientePorNome(nome) {
     }
 }
 
+
 /**
- * Cria ou atualiza operador evitando duplicatas
+ * Cria ou atualiza operador evitando duplicatas, 
  */
 async function criarOuAtualizarOperador(nomeOperador, projetoId, projetoData) {
     try {
@@ -1837,6 +1869,7 @@ async function criarOuAtualizarOperador(nomeOperador, projetoId, projetoData) {
         if (operadorExistente) {
             console.log(`🔄 Operador existente: ${nomeOperador}`);
             
+
             // Verifica se o projeto já está associado ao operador
             const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos/${projetoId}`);
             const projetoSnapshot = await get(projetosRef);
@@ -1899,10 +1932,39 @@ async function criarOuAtualizarOperador(nomeOperador, projetoId, projetoData) {
             error: error.message
         };
     }
+
+    //atualize dados do operador
+}
+async function atualizarOperador(nome, novosDados) {
+    try {
+        
+        const q = await buscarOperadorPorNome(nome);
+        const operadoresRef = ref(database, `operadores/${q.id}`);
+        const Shot = await get(operadoresRef);
+        const values = Shot.val();
+
+        if (!values) {
+            alert('Operador não encontrado');
+            return false;
+        }
+
+        if (values) {
+            await update(operadoresRef, novosDados);
+            alert('Operador atualizado com sucesso!');
+            return true;
+        } else {
+            alert('Operador não encontrado');
+            return false;
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar operador:', error);
+        alert('Erro ao atualizar operador');
+        return false;
+    }
 }
 
 /**
- * Cria ou atualiza operador evitando duplicatas COM DATA
+ * Cria ou atualiza operador evitando duplicatas COM DATAfunção gambiarra
  */
 async function criarOuAtualizarOperadorCOMDATA(nomeOperador, projetoId, projetoData, operadorDataBase) {
     try {
@@ -1910,8 +1972,48 @@ async function criarOuAtualizarOperadorCOMDATA(nomeOperador, projetoId, projetoD
         const operadorExistente = await buscarOperadorPorNome(nomeOperador);
         
         if (operadorExistente) {
-            console.log(`🔄 Operador existente: ${nomeOperador}`);
             
+            
+        
+            const operadorRef =await ref(database, `operadores/${operadorExistente.id}`);
+            const snapshot = await get(operadorRef);
+            const valores = snapshot.val();
+            console.log(operadorRef);
+            if (operadorRef) {
+                // Limpar formulário (opcional)
+                document.getElementById('nomeOperador').value = valores.nome;
+                document.getElementById('competencias').value = valores.competencias;
+                contadorCaracteres.textContent = '0';
+                
+            }
+
+            const salvarOperadotbtnTxt = document.getElementById("btnSalvar");
+            if (salvarOperadotbtnTxt.innerHTML == "Atualizar Operador") {
+                atualizarOperador(nomeOperador, operadorDataBase);
+            }else{
+            alert(`🔄 Operador existente: ${nomeOperador}`);
+            alert(`Indo para tela de atualização de dados!`);
+            salvarOperadotbtnTxt.innerHTML = "Atualizar Operador";
+            
+            
+            // Verifica se o projeto já está associado ao operador
+            const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos/${projetoId}`);
+            const projetoSnapshot = await get(projetosRef);
+            
+            if (!projetoSnapshot.exists()) {
+                // Adiciona o projeto ao operador existente
+                await set(projetosRef, {
+                    id: projetoId,
+                    obra: projetoData.obra,
+                    dataAssociacao: new Date().toISOString(),
+                    ...projetoData
+                });
+                console.log(`✅ Projeto adicionado ao operador existente`);
+            } else {
+                console.log(`ℹ️ Projeto já existe no operador`);
+            };
+            return;
+            }
             // Verifica se o projeto já está associado ao operador
             const projetosRef = ref(database, `operadores/${operadorExistente.id}/projetos/${projetoId}`);
             const projetoSnapshot = await get(projetosRef);
@@ -1936,6 +2038,10 @@ async function criarOuAtualizarOperadorCOMDATA(nomeOperador, projetoId, projetoD
                 operadorNome: nomeOperador
             };
         } else {
+                // Limpar formulário (opcional)
+                document.getElementById('nomeOperador').value = '';
+                document.getElementById('competencias').value = '';
+                contadorCaracteres.textContent = '0';
             // Cria novo operador
             const operadorId = gerarIdUnicoPorNome(nomeOperador, 'op_');
             
@@ -2076,13 +2182,108 @@ function extrairNomeReal(nomeCompleto) {
     
     return nome;
 }
+// Supondo que você já tenha inicializado o Firebase e tenha uma variável 'db' para o Firestore
+// Se não, você pode inicializar assim:
+//   const firebaseConfig = { ... };
+//   firebase.initializeApp(firebaseConfig);
+//   const db = firebase.firestore();
+/**
+ * Função Firebase Realtime Database para verificar se o nó 'projetos' está vazio
+ * Se estiver, cria o projeto 0 com parâmetros predefinidos
+ */
+async function verificarECriarProjeto0() {
+    try {
+        console.log('🔍 Verificando nó "projetos" no Firebase Realtime Database...');
+        
+        // Referência para o nó de projetos
+        const projetosRef = ref(database,'projetos');
+        
+        // Verificar se existem dados no nó
+        const snapshot = await get(projetosRef);
+        
+        if (!snapshot.exists()) {
+            console.log('📝 Nó "projetos" vazio. Criando Projeto 0...');
+            
+            // Criar projeto 0 com parâmetros predefinidos
+            const projeto0 = {
+        cliente: "InitialOrder",
+        obra: "InitialOrder",
+        localizacao: "InitialOrder",
+        descricao: "InitialOrder",
+        email: "InitialOrder",
+        whatsappCliente: "InitialOrder",
+        Criado:"InitialOrder",
+        cpfCnpjCliente: "InitialOrder",
+        operadores: [],
+        dataInicial: "InitialOrder",
+        dataFinal: "InitialOrder",
+        managerId: 0,
+        status: 1
+            };
+            
+  set(ref(database, 'projetos/' + 0), projeto0);
+            
+            console.log('✅ Projeto 0 criado com sucesso no Firebase Realtime Database!');
+            console.log('📋 Detalhes:', projeto0);
+            
+            return {
+                success: true,
+                message: "Projeto 0 criado com sucesso",
+                projeto: projeto0,
+                projetoId: "0"
+            };
+            
+        } else {
+            const projetos = snapshot.val();
+            const projetosArray = Object.keys(projetos).map(key => ({
+                id: key,
+                ...projetos[key]
+            }));
+            
+            console.log(`📊 Nó "projetos" já contém ${projetosArray.length} projeto(s).`);
+            
+            // Verificar se existe o projeto 0
+            const projeto0 = projetos["0"];
+            
+            if (projeto0) {
+                console.log('✅ Projeto 0 já existe no sistema');
+                return {
+                    success: true,
+                    message: "Projeto 0 já existe",
+                    projeto: {
+                        id: "0",
+                        ...projeto0
+                    },
+                    projetoId: "0"
+                };
+            } else {
+                console.log('⚠️  Projeto 0 não encontrado, mas existem outros projetos');
+                return {
+                    success: true,
+                    message: "Sistema já possui projetos, mas não o projeto 0",
+                    projetos: projetosArray,
+                    primeiroProjeto: projetosArray[0]
+                };
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar/criar projeto :', error);
+        
+        return {
+            success: false,
+            message: `Erro: ${error.message}`,
+            error: error
+        };
+    }
+}
+
+
+
 
 /**
  * Busca projeto pelo nome exato da obra
- *//**
- * Busca projeto pelo nome exato da obra
  */
-
 async function buscarProjetoPorNome(nomeObra) {
     try {
         console.log(`🔍 Buscando projeto pelo nome: "${nomeObra}"`);
@@ -2106,9 +2307,11 @@ async function buscarProjetoPorNome(nomeObra) {
             console.log(`    Nome no banco: "${projeto.obra}"`);
             console.log(`    Comparando com: "${nomeObra}"`);
             
-            if (projeto.obra = "InitialOrder") {
-                return;
+            // CORREÇÃO: Remover esta linha que causa erro
+         if (projeto.obra = "InitialOrder") {
+             return;
             }
+            
             // Verifica se a propriedade obra existe e faz a comparação
             if (projeto.obra && projeto.obra.trim().toLowerCase() === nomeObra.trim().toLowerCase()) {
                 console.log(`✅ Projeto encontrado! ID: ${projetoId}`);
@@ -2127,6 +2330,7 @@ async function buscarProjetoPorNome(nomeObra) {
         return null;
     }
 }
+
 function obterDataDeHoje() {
   return new Date().toLocaleDateString('pt-BR');
 }
