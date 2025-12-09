@@ -78,10 +78,18 @@ input.addEventListener('keydown', function(event) {
         
     }
 
+   
     const botaoListaOperator = document.getElementById("submitOperator");
+    const operatorsDL = document.getElementById("operadortolist");
     if (botaoListaOperator != null) {
         
-    //por algum motivo isso abaixo n funciona
+    operatorsDL.addEventListener('keydown',(event)=>{
+        if (event.key == 'Enter') {
+        event.preventDefault();
+        addOperators();
+            
+        }
+    })
     botaoListaOperator.addEventListener("click", ()=>{addOperators()});
     }
     /*botaoSalvar.addEventListener("click", () => {

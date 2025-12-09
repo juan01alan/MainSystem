@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Câmera Web App</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#4B341C',
+              secondary: '#6D4C2E',
+              accent: '#8B7355',
+              background: {
+                light: '#f8f7f6',
+                dark: '#121212'
+              }
+            },
+            fontFamily: {
+              'display': ['Manrope', 'sans-serif']
+            },
+            animation: {
+              'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in': 'fade-in 0.3s ease-out',
+              'fade-out': 'fade-out 0.3s ease-out',
+            },
+            keyframes: {
+              'pulse-soft': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.5 }
+              },
+              'fade-in': {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 }
+              },
+              'fade-out': {
+                '0%': { opacity: 1 },
+                '100%': { opacity: 0 }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        video {
+            transform: scaleX(-1);
+            object-fit: cover;
+        }
+        
+        video.rear-camera {
+            transform: scaleX(1);
+        }
+
+        .shutter-button:active {
+            transform: scale(0.9);
+        }
+        
+        .shutter-button:active::after {
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background-dark font-display text-white">
+    <!-- Tela Inicial de Permissão -->
+    <div id="start-screen" class="fixed inset-0 bg-background-dark z-50 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
+        <div class="max-w-md mx-auto">
+            <div class="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <span class="material-symbols-outlined text-4xl text-white">
+                    photo_camera
+                </span>
+            </div>
+            
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">📸 Câmera Web App</h2>
+            <p class="text-gray-400 mb-8 text-base md:text-lg">Clique no botão abaixo para autorizar o acesso à câmera</p>
+            
+            <button id="btnStart" class="btn-start w-full max-w-xs bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-green-500/25 transition-all duration-200 transform hover:scale-105 active:scale-95">
+                <div class="flex items-center justify-center gap-3">
+                    <span class="material-symbols-outlined">videocam</span>
+                    <span class="text-lg">Ligar Câmera</span>
+                </div>
+            </button>
+            
+            <div id="start-error" class="error-msg mt-6 text-red-400 text-sm md:text-base p-4 bg-red-500/10 rounded-xl border border-red-500/20 hidden"></div>
+            
+            <div class="mt-10 text-gray-500 text-sm">
+                <p>Para uma melhor experiência, permita o acesso à câmera quando solicitado.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Principal da Câmera -->
+    <div id="camera-container" class="relative w-full h-full max-w-2xl mx-auto bg-black flex flex-col justify-end overflow-hidden">
+        <!-- Elemento de Vídeo -->
+        <video id="videoFeed" class="absolute inset-0 w-full h-full z-10" autoplay playsinline muted></video>
+        
+        <!-- Flash -->
+        <div id="flash-effect" class="flash absolute inset-0 bg-white z-30 opacity-0 transition-opacity duration-100 pointer-events-none"></div>
+        
+        <!-- Overlay de Status -->
+        <div class="absolute top-4 left-0 right-0 z-20 px-4">
+            <div id="status-msg" class="text-center text-sm font-medium text-white bg-black/50 backdrop-blur-sm rounded-full py-2 px-4 inline-block shadow-lg"></div>
+        </div>
+
+        <!-- Controles Inferiores -->
+        <div class="controls relative z-20 w-full p-6 pb-8 flex flex-col items-center gap-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+            <div class="settings-row w-full flex items-center gap-3">
+                <!-- Campo de Nome do Arquivo -->
+                <div class="flex-1 relative">
+                    <input type="text" id="filePrefix" 
+                           class="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-white/60 rounded-2xl py-4 px-5 pr-12 text-sm md:text-base focus:bg-white/15 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 outline-none transition-all duration-200"
+                           value="foto_chat"
+                           disabled>
+                    <span class="material-symbols-outlined absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 text-lg">
+                        drive_file_rename_outline
+                    </span>
+                </div>
+                
+                <!-- Botão Trocar Câmera -->
+                <button id="btnSwitchCamera" class="btn-switch w-14 h-14 flex-shrink-0 bg-black/50 backdrop-blur-md border border-white/20 text-white rounded-2xl flex items-center justify-center hover:bg-white/20 hover:border-white/30 active:scale-95 transition-all duration-200"
+                        title="Trocar Câmera">
+                    <span class="material-symbols-outlined text-2xl">
+                        flip_camera_ios
+                    </span>
+                </button>
+            </div>
+
+            <!-- Botão Shutter (Disparo) -->
+            <div class="relative">
+                <button id="btnCapture" 
+                        class="shutter-button w-24 h-24 rounded-full border-4 border-white bg-gradient-to-br from-primary/30 to-secondary/30 shadow-2xl shadow-primary/30 hover:shadow-primary/40 hover:from-primary/40 hover:to-secondary/40 active:shadow-primary/20 active:from-primary/20 active:to-secondary/20 transition-all duration-200 relative"
+                        title="Tirar Foto">
+                    <div class="absolute inset-0 rounded-full bg-white/20 blur-sm"></div>
+                    <div class="absolute inset-4 rounded-full bg-white/80"></div>
+                </button>
+                
+                <!-- Anel de efeito pulsante -->
+                <div class="absolute inset-0 rounded-full border-4 border-white/30 animate-ping-soft -z-10"></div>
+            </div>
+
+            <!-- Informações de ajuda -->
+            <div class="text-center text-white/60 text-xs md:text-sm font-medium mt-2">
+                <p>Clique no botão para capturar a foto</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas Oculto para Processamento -->
+    <canvas id="photoCanvas" class="hidden"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded',()=>{
+            const urlParams = new URLSearchParams(window.location.search);
+            const fotoParam = urlParams.get('obra');
+            const inputElement = document.getElementById('filePrefix');
+            
+            if (fotoParam && inputElement) {
+                inputElement.value = fotoParam + "_" + Date.now();
+            }
+        });
+
+        // --- CONFIGURAÇÃO ---
+        const SERVER_URL = "upload.php";
+
+        // --- ELEMENTOS ---
+        const video = document.getElementById('videoFeed');
+        const canvas = document.getElementById('photoCanvas');
+        const btnCapture = document.getElementById('btnCapture');
+        const btnSwitch = document.getElementById('btnSwitchCamera');
+        const inputPrefix = document.getElementById('filePrefix');
+        const statusMsg = document.getElementById('status-msg');
+        const flash = document.getElementById('flash-effect');
+        const startScreen = document.getElementById('start-screen');
+        const btnStart = document.getElementById('btnStart');
+        const startError = document.getElementById('start-error');
+
+        // --- ESTADO ---
+        let currentStream = null;
+        let facingMode = 'user';
+
+        // 1. INICIAR CÂMERA
+        async function startCamera() {
+            startError.textContent = "Solicitando permissão...";
+            startError.classList.remove('hidden');
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: facingMode,
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                currentStream = stream;
+                video.srcObject = stream;
+                
+                if (facingMode === 'user') {
+                    video.classList.remove('rear-camera');
+                } else {
+                    video.classList.add('rear-camera');
+                }
+                
+                video.onloadedmetadata = () => {
+                    startScreen.classList.add('animate-fade-out');
+                    setTimeout(() => {
+                        startScreen.style.display = 'none';
+                        startError.classList.add('hidden');
+                        updateStatus('Câmera pronta', 'success');
+                    }, 300);
+                };
+            } catch (err) {
+                console.error("Erro Câmera:", err);
+                let msg = "Erro desconhecido.";
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    msg = "🚫 Acesso negado. Permita a câmera nas configurações do navegador.";
+                } else if (err.name === 'NotFoundError') {
+                    msg = "📷 Nenhuma câmera encontrada.";
+                } else if (err.name === 'NotReadableError') {
+                    msg = "⚠️ Câmera em uso por outro aplicativo.";
+                }
+                startError.textContent = msg;
+                startError.classList.remove('hidden');
+                startScreen.style.display = 'flex';
+                updateStatus('Erro ao acessar câmera', 'error');
+            }
+        }
+
+        // 2. BOTÃO INICIAR
+        btnStart.addEventListener('click', startCamera);
+
+        // 3. TROCAR CÂMERA
+        btnSwitch.addEventListener('click', () => {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            updateStatus('Alternando câmera...', 'info');
+            startCamera();
+        });
+
+        // 4. TIRAR FOTO
+        btnCapture.addEventListener('click', async () => {
+            if (!video.videoWidth) return;
+
+            // Efeito de Flash
+            flash.style.opacity = 0.8;
+            setTimeout(() => flash.style.opacity = 0, 150);
+
+            // Configura Canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            
+            if (facingMode === 'user') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const filename = generateFilename();
+            
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    updateStatus('Erro ao processar imagem', 'error');
+                    return;
+                }
+
+                saveToClient(blob, filename);
+                await uploadToServer(blob, filename);
+
+            }, 'image/jpeg', 0.95);
+        });
+
+        // --- FUNÇÕES AUXILIARES ---
+
+        function generateFilename() {
+            const prefix = inputPrefix.value.trim().replace(/[^a-z0-9]/gi, '_') || "foto";
+            const now = new Date();
+            
+            const dateStr = now.getFullYear() + '-' +
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(now.getDate()).padStart(2, '0');
+            
+            const timeStr = String(now.getHours()).padStart(2, '0') + '-' +
+                            String(now.getMinutes()).padStart(2, '0') + '-' +
+                            String(now.getSeconds()).padStart(2, '0');
+
+            return `${prefix}_${dateStr}_${timeStr}.jpg`;
+        }
+
+        function saveToClient(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                updateStatus('⬇️ Baixado | ⬆️ Enviando...', 'info');
+            }, 100);
+        }
+
+        async function uploadToServer(blob, filename) {
+            if (!SERVER_URL) {
+                updateStatus('Salvo no dispositivo (backend não configurado)', 'warning');
+                setTimeout(() => {
+                    if (statusMsg.textContent.includes("não configurado")) {
+                        statusMsg.textContent = '';
+                        statusMsg.className = '';
+                    }
+                }, 4000);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('imagem', blob, filename);
+
+            try {
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    updateStatus('✅ Salvo no servidor!', 'success');
+                } else {
+                    throw new Error(response.statusText);
+                }
+            } catch (error) {
+                console.error("Erro upload:", error);
+                updateStatus('⚠️ Salvo localmente, falha no servidor', 'warning');
+            }
+            
+            setTimeout(() => {
+                if (statusMsg.textContent.includes("Sucesso")) {
+                    statusMsg.textContent = '';
+                    statusMsg.className = '';
+                }
+            }, 4000);
+        }
+
+        // Função para atualizar status com estilos
+        function updateStatus(message, type = 'info') {
+            statusMsg.textContent = message;
+            statusMsg.className = 'text-center text-sm font-medium rounded-full py-2 px-4 inline-block shadow-lg transition-all duration-300';
+            
+            switch(type) {
+                case 'success':
+                    statusMsg.classList.add('bg-green-500/90', 'text-white');
+                    break;
+                case 'error':
+                    statusMsg.classList.add('bg-red-500/90', 'text-white');
+                    break;
+                case 'warning':
+                    statusMsg.classList.add('bg-yellow-500/90', 'text-white');
+                    break;
+                default:
+                    statusMsg.classList.add('bg-black/70', 'text-white', 'backdrop-blur-sm');
+                    break;
+            }
+        }
+
+        // Detectar tecla Espaço para capturar foto
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && startScreen.style.display === 'none') {
+                e.preventDefault();
+                btnCapture.click();
+            }
+        });
+
+        // Inicializar status
+        updateStatus('Pronto para capturar', 'info');
+    </script>
+</body>
+</html>

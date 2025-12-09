@@ -1,2 +1,0 @@
-# rotina_para_tirar_e_compactar_fotos_selecionadas
-rotina_para_tirar_e_compactar_fotos_selecionadas

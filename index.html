@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Firebase -->
+   <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
@@ -277,7 +277,7 @@
             
             <!-- Rodapé do Conteúdo -->
             <div class="mt-12 pt-8 border-t border-input-border text-center text-text-secondary text-sm fade-in" style="animation-delay: 0.5s;">
-                <p>Sistema WeDo Administração v1.0 • © 2023 Todos os direitos reservados</p>
+                <p>Sistema WeDo Administração © 2025 Todos os direitos reservados</p>
                 <p class="mt-1">Desenvolvido para otimizar a gestão de obras e operadores</p>
             </div>
         </main>
@@ -302,7 +302,7 @@
                     
                     <a href="public/CadastrarOperador.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/20 text-text-primary hover:text-accent transition">
                         <i class="fas fa-user-plus"></i>
-                        <span>Cadastro de Operadores</span>
+                        <span>Gestão de Operadores</span>
                     </a>
                     
                     <a href="public/listaoperator.html" class="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/10 text-text-primary hover:text-wood-medium transition">
@@ -315,186 +315,176 @@
                         <span>Obras Atuais</span>
                     </a>
                     
-                    <div class="pt-4 border-t border-input-border">
-                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-wood-light text-text-primary transition">
-                            <i class="fas fa-user-circle"></i>
-                            <span>Perfil do Usuário</span>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 rounded-lg hover:bg-wood-light text-text-primary transition">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Sair do Sistema</span>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBaA1GvG0O9kxtvM_jRkMwGTkkqDUK4cb8",
-            authDomain: "linen-works-420623.firebaseapp.com",
-            databaseURL: "https://linen-works-420623-default-rtdb.firebaseio.com",
-            projectId: "linen-works-420623",
-            storageBucket: "linen-works-420623.firebasestorage.app",
-            messagingSenderId: "1024746152058",
-            appId: "1:1024746152058:web:7783459f7a045de5f01bc3"
-        };
+    <script type="module">
+import { database } from "./public/javascript/firebase.mjs";
+import { ref, get } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
 
-        // Função para contar projetos (subtrai 1)
-        async function contarProjetos() {
-            try {
-                const projetosRef = database.ref('projetos');
-                const snapshot = await projetosRef.once('value');
-                
-                if (snapshot.exists()) {
-                    const projetos = snapshot.val();
-                    const quantidade = Object.keys(projetos).length;
-                    
-                    // Subtrai 1 como solicitado
-                    const total = Math.max(0, quantidade - 1);
-                    
-                    document.getElementById('project-count').textContent = total;
-                    document.getElementById('project-info').textContent = `Total de projetos no sistema`;
-                    
-                    return total;
-                } else {
-                    document.getElementById('project-count').textContent = '0';
-                    document.getElementById('project-info').textContent = 'Nenhum projeto cadastrado';
-                    return 0;
-                }
-            } catch (error) {
-                console.error('Erro ao contar projetos:', error);
-                document.getElementById('project-count').textContent = '0';
-                document.getElementById('project-info').textContent = 'Erro ao carregar dados';
-                return 0;
-            }
-        }
 
-        // Função para contar operadores (sem subtrair 1)
-        async function contarOperadores() {
-            try {
-                const operadoresRef = database.ref('operadores');
-                const snapshot = await operadoresRef.once('value');
-                
-                if (snapshot.exists()) {
-                    const operadores = snapshot.val();
-                    const quantidade = Object.keys(operadores).length;
-                    
-                    document.getElementById('operator-count').textContent = quantidade;
-                    document.getElementById('operator-info').textContent = `Total de operadores cadastrados`;
-                    
-                    return quantidade;
-                } else {
-                    document.getElementById('operator-count').textContent = '0';
-                    document.getElementById('operator-info').textContent = 'Nenhum operador cadastrado';
-                    return 0;
-                }
-            } catch (error) {
-                console.error('Erro ao contar operadores:', error);
-                document.getElementById('operator-count').textContent = '0';
-                document.getElementById('operator-info').textContent = 'Erro ao carregar dados';
-                return 0;
-            }
-        }
+// -------------------- CONTAR PROJETOS --------------------
+async function contarProjetos() {
+  try {
+    const projetosRef = ref(database, "projetos");
+    const snapshot = await get(projetosRef);
 
-        // Atualizar horário em tempo real
-        function updateDateTime() {
-            const now = new Date();
-            
-            // Formatar hora
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            
-            // Formatar data
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateStr = now.toLocaleDateString('pt-BR', options);
-            
-            // Atualizar elementos HTML
-            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
-            document.getElementById('current-date').textContent = dateStr;
-        }
-        
-        // Menu mobile
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.remove('hidden');
-            setTimeout(() => {
-                document.querySelector('#mobile-menu > div').style.transform = 'translateX(0)';
-            }, 10);
-        });
-        
-        document.getElementById('close-mobile-menu').addEventListener('click', function() {
-            document.querySelector('#mobile-menu > div').style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                document.getElementById('mobile-menu').classList.add('hidden');
-            }, 300);
-        });
-        
-        // Fechar menu ao clicar fora
-        document.getElementById('mobile-menu').addEventListener('click', function(e) {
-            if (e.target.id === 'mobile-menu') {
-                document.querySelector('#mobile-menu > div').style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    document.getElementById('mobile-menu').classList.add('hidden');
-                }, 300);
-            }
-        });
-        
-        // Animações de entrada
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Inicializar relógio
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            
-            // Carregar dados do Firebase
-            await contarProjetos();
-            await contarOperadores();
-            
-            // Configurar atualização automática a cada 30 segundos
-            setInterval(async () => {
-                await contarProjetos();
-                await contarOperadores();
-            }, 30000);
-            
-            // Animar elementos com delay
-            const fadeElements = document.querySelectorAll('.fade-in');
-            fadeElements.forEach((el, index) => {
-                el.style.opacity = '0';
-                setTimeout(() => {
-                    el.style.animationDelay = `${index * 0.1}s`;
-                    el.classList.add('fade-in');
-                }, 100);
-            });
-            
-            // Adicionar efeito de clique nos cards
-            const cards = document.querySelectorAll('.btn-hover');
-            cards.forEach(card => {
-                card.addEventListener('mousedown', function() {
-                    this.style.transform = 'scale(0.98)';
-                });
-                
-                card.addEventListener('mouseup', function() {
-                    this.style.transform = '';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = '';
-                });
-            });
-            
-            console.log('Sistema WeDo Administração inicializado com sucesso!');
-        });
+    if (snapshot.exists()) {
+      const quantidade = Object.keys(snapshot.val()).length;
+      const total = Math.max(0, quantidade - 1);
 
-        // Expor funções para possível uso externo
-        window.contarProjetos = contarProjetos;
-        window.contarOperadores = contarOperadores;
+      document.getElementById("project-count").textContent = total;
+      document.getElementById("project-info").textContent =
+        "Total de projetos no sistema";
+    } else {
+      document.getElementById("project-count").textContent = "0";
+      document.getElementById("project-info").textContent =
+        "Nenhum projeto cadastrado";
+    }
+  } catch (error) {
+    console.error("Erro ao contar projetos:", error);
+  }
+}
+
+// -------------------- CONTAR OPERADORES --------------------
+async function contarOperadores() {
+  try {
+    const operadoresRef = ref(database, "operadores");
+    const snapshot = await get(operadoresRef);
+
+    if (snapshot.exists()) {
+      const operadores = snapshot.val();
+      const qtd = Object.keys(operadores).length;
+
+      document.getElementById("operator-count").textContent = qtd;
+      document.getElementById("operator-info").textContent =
+        "Total de operadores cadastrados";
+    } else {
+      document.getElementById("operator-count").textContent = "0";
+      document.getElementById("operator-info").textContent =
+        "Nenhum operador cadastrado";
+    }
+  } catch (error) {
+    console.error("Erro ao contar operadores:", error);
+  }
+}
+
+// Executar após carregamento da página
+document.addEventListener("DOMContentLoaded", () => {
+  contarProjetos();
+  contarOperadores();
+});
+
+// Atualizar horário em tempo real
+function updateDateTime() {
+  const now = new Date();
+
+  // Formatar hora
+  const hours = now.getHours().toString().padStart(2, "0");
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const seconds = now.getSeconds().toString().padStart(2, "0");
+
+  // Formatar data
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+  const dateStr = now.toLocaleDateString("pt-BR", options);
+
+  // Atualizar elementos HTML
+  document.getElementById(
+    "current-time"
+  ).textContent = `${hours}:${minutes}:${seconds}`;
+  document.getElementById("current-date").textContent = dateStr;
+}
+
+// Menu mobile
+document
+  .getElementById("mobile-menu-btn")
+  .addEventListener("click", function () {
+    document.getElementById("mobile-menu").classList.remove("hidden");
+    setTimeout(() => {
+      document.querySelector("#mobile-menu > div").style.transform =
+        "translateX(0)";
+    }, 10);
+  });
+
+document
+  .getElementById("close-mobile-menu")
+  .addEventListener("click", function () {
+    document.querySelector("#mobile-menu > div").style.transform =
+      "translateX(100%)";
+    setTimeout(() => {
+      document.getElementById("mobile-menu").classList.add("hidden");
+    }, 300);
+  });
+
+// Fechar menu ao clicar fora
+document.getElementById("mobile-menu").addEventListener("click", function (e) {
+  if (e.target.id === "mobile-menu") {
+    document.querySelector("#mobile-menu > div").style.transform =
+      "translateX(100%)";
+    setTimeout(() => {
+      document.getElementById("mobile-menu").classList.add("hidden");
+    }, 300);
+  }
+});
+
+// Animações de entrada
+document.addEventListener("DOMContentLoaded", async function () {
+  // Inicializar relógio
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
+  // Carregar dados do Firebase
+  await contarProjetos();
+  await contarOperadores();
+
+  // Configurar atualização automática a cada 30 segundos
+  setInterval(async () => {
+    await contarProjetos();
+    await contarOperadores();
+  }, 30000);
+
+  // Animar elementos com delay
+  const fadeElements = document.querySelectorAll(".fade-in");
+  fadeElements.forEach((el, index) => {
+    el.style.opacity = "0";
+    setTimeout(() => {
+      el.style.animationDelay = `${index * 0.1}s`;
+      el.classList.add("fade-in");
+    }, 100);
+  });
+
+  // Adicionar efeito de clique nos cards
+  const cards = document.querySelectorAll(".btn-hover");
+  cards.forEach((card) => {
+    card.addEventListener("mousedown", function () {
+      this.style.transform = "scale(0.98)";
+    });
+
+    card.addEventListener("mouseup", function () {
+      this.style.transform = "";
+    });
+
+    card.addEventListener("mouseleave", function () {
+      this.style.transform = "";
+    });
+  });
+
+  console.log("Sistema WeDo Administração inicializado com sucesso!");
+});
+
+// Expor funções para possível uso externo
+window.contarProjetos = contarProjetos;
+window.contarOperadores = contarOperadores;
+
     </script>
 </body>
 </html>

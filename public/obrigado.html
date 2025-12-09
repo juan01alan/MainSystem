@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obrigado - WeDo</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4B341C",
+                        "secondary": "#DEB887",
+                        "text-primary": "#3D2B1F",
+                        "text-secondary": "#856d4b",
+                        "background": "#ffff",
+                        "input-border": "#E0D6C3",
+                        "input-bg": "#FFFFFF",
+                        "success": "#10B981",
+                        "success-light": "#D1FAE5"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'scale-up': 'scaleUp 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        scaleUp: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .rating-badge {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rating-badge::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="font-display bg-gradient-to-br from-background to-secondary/10 min-h-screen">
+    
+    <!-- Main Content -->
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        
+        <!-- Success Card -->
+        <div class="w-full max-w-sm animate-scale-up">
+            <div class="bg-input-bg rounded-3xl shadow-xl border border-input-border p-8 text-center">
+                
+                <!-- Success Icon -->
+                <div class="relative mb-6">
+                    <div class="w-20 h-20 bg-success-light rounded-full flex items-center justify-center mx-auto animate-float">
+                        <div class="w-16 h-16 bg-success rounded-full flex items-center justify-center">
+                            <i class="fas fa-check text-white text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Title -->
+                <h1 class="text-2xl font-bold text-text-primary mb-4 animate-fade-in" style="animation-delay: 0.2s;">
+                    Obrigado
+                </h1>
+                
+                <!-- Rating Display -->
+                <div id="rating-display" class="my-8 animate-fade-in" style="animation-delay: 0.4s;">
+                    <div class="flex flex-col items-center">
+                        <!-- Nota Numérica -->
+                        <div class="rating-badge mb-4" id="nota-badge">
+                            <div class="text-center">
+                                <div class="text-4xl font-bold" id="nota-numerica">0</div>
+                                <div class="text-xs text-text-secondary mt-1">de 10</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Texto da Avaliação -->
+                        <div class="text-center">
+                            <p class="text-sm text-text-secondary" id="texto-avaliacao">Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Obter texto da avaliação baseado na nota
+        function getTextoAvaliacao(nota) {
+            if (nota >= 9) return "Excelente";
+            if (nota >= 8) return "Muito Bom";
+            if (nota >= 7) return "Bom";
+            if (nota >= 6) return "Satisfatório";
+            if (nota >= 5) return "Regular";
+            if (nota >= 4) return "Insuficiente";
+            if (nota >= 3) return "Ruim";
+            if (nota >= 2) return "Muito Ruim";
+            if (nota >= 1) return "Péssimo";
+            return "Não Avaliado";
+        }
+        
+        // Calcular cor baseada na nota
+        function getCorNota(nota) {
+            if (nota >= 8) return "#10B981"; // Verde
+            if (nota >= 6) return "#F59E0B"; // Laranja
+            return "#EF4444"; // Vermelho
+        }
+        
+        // Atualizar aparência do badge baseado na nota
+        function atualizarBadgeAvaliacao(nota) {
+            const badge = document.getElementById('nota-badge');
+            const notaElement = document.getElementById('nota-numerica');
+            const cor = getCorNota(nota);
+            
+            // Atualizar cores do badge
+            badge.style.background = `linear-gradient(135deg, ${cor}20, ${cor}40)`;
+            badge.style.border = `3px solid ${cor}`;
+            
+            // Atualizar cor do texto
+            if (notaElement) {
+                notaElement.style.color = cor;
+            }
+            
+            // Adicionar efeito de brilho
+            badge.style.boxShadow = `0 10px 30px ${cor}40`;
+        }
+        
+        // Carregar dados dos parâmetros da URL
+        function loadFeedbackData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const notaParam = urlParams.get('nota');
+            const mediaParam = urlParams.get('media');
+            
+            // Priorizar o parâmetro 'nota', depois 'media'
+            let nota = 0;
+            if (notaParam) {
+                nota = parseFloat(notaParam);
+            } else if (mediaParam) {
+                nota = parseFloat(mediaParam);
+            }
+            
+            // Garantir que a nota esteja entre 0 e 10
+            nota = Math.max(0, Math.min(10, nota));
+            
+            // Atualizar elementos da interface
+            const notaElement = document.getElementById('nota-numerica');
+            const textoElement = document.getElementById('texto-avaliacao');
+            
+            if (notaElement) notaElement.textContent = nota.toFixed(1);
+            if (textoElement) textoElement.textContent = getTextoAvaliacao(nota);
+            
+            // Atualizar badge
+            atualizarBadgeAvaliacao(nota);
+            
+            return nota;
+        }
+        
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados do feedback
+            const nota = loadFeedbackData();
+            
+            // Efeito de transição suave
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease';
+                document.body.style.opacity = '1';
+            }, 100);
+            
+            // Salvar no localStorage para referência
+            if (nota > 0) {
+                localStorage.setItem('ultimaAvaliacao', nota.toFixed(1));
+                localStorage.setItem('dataUltimaAvaliacao', new Date().toISOString());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,1 +1,0 @@
-abra o arquivo key.txt e substitua o conteudo por suas chaves do  firebase.

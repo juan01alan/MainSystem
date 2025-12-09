@@ -1,0 +1,67 @@
+/* css/main.css */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  #feedbacksContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .flex-col-sm {
+    flex-direction: column;
+  }
+  
+  .gap-2 {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  #statsContainer .grid > div {
+    padding: 0.75rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-lg {
+    font-size: 1rem;
+  }
+}
+
+/* Melhorias de toque para mobile */
+@media (hover: none) and (pointer: coarse) {
+  button, 
+  select,
+  input,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .material-symbols-outlined {
+    font-size: 24px;
+  }
+}
+
+/* Transições suaves */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Foco acessível */
+:focus-visible {
+  outline: 2px solid #4B341C;
+  outline-offset: 2px;
+}
